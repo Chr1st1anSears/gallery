@@ -36,7 +36,7 @@ def upload_image_file(img):
 app = Flask(__name__)
 app.config.update(
     SECRET_KEY=secret_getter.get_secret('flask-secret-key'),
-    MAX_CONTENT_LENGTH=8 * 1024 * 1024,
+    MAX_CONTENT_LENGTH=16 * 1024 * 1024,
     ALLOWED_EXTENSIONS=set(['png', 'jpg', 'jpeg', 'gif']),
     CLIENT_SECRETS=json.loads(secret_getter.get_secret('gallery-client-secrets')), # RECOMMENDATION: Rename secret
     SCOPES=[
