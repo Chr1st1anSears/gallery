@@ -41,7 +41,6 @@ app.config.update(
     CLIENT_SECRETS=json.loads(secret_getter.get_secret('gallery-client-secrets')), # RECOMMENDATION: Rename secret
     SCOPES=[
         'openid',
-        'https://www.googleapis.com/auth/contacts.readonly',
         'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/userinfo.profile',
     ],
