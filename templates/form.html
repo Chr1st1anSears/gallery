@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>{{action}} Photo</h3>
+
+<form method="POST" enctype="multipart/form-data">
+
+    <div class="form-group">
+        <label for="peopleInPhoto">People in Photo</label>
+        <input type="text" name="peopleInPhoto" id="peopleInPhoto" value="{{photo.peopleInPhoto}}" class="form-control"/>
+    </div>
+
+    <div class="form-group">
+        <label for="dateTaken">Date Taken</label>
+        <input type="text" name="dateTaken" id="dateTaken" value="{{photo.dateTaken}}" class="form-control"/>
+    </div>
+
+    <div class="form-group">
+        <label for="description">Description</label>
+        <textarea name="description" id="description" class="form-control">{{photo.description}}</textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="image">Photo</label>
+        <input type="file" name="image" id="image" class="form-control"/>
+    </div>
+
+    <div class="form-group hidden">
+        <label for="imageUrl">Photo URL</label>
+        <input type="text" name="imageUrl" id="imageUrl" value="{{photo.imageUrl}}" class="form-control"/>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+</form>
+
+{% endblock %}
