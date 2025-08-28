@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Gallery</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        
+        <script defer src="/__/firebase/12.1.0/firebase-app-compat.js"></script>
+        <script defer src="/__/firebase/12.1.0/firebase-auth-compat.js"></script>
+        <script defer src="/__/firebase/12.1.0/firebase-firestore-compat.js"></script>
+        <script defer src="/__/firebase/12.1.0/firebase-functions-compat.js"></script>
+        <script defer src="/__/firebase/12.1.0/firebase-storage-compat.js"></script>
+        <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+    </head>
+    <body>
+        <div class="navbar navbar-default">
+            <div class="container">
+                <div class="navbar-header">
+                    <div class="navbar-brand">Gallery</div>
+                </div>
+                <ul class="nav navbar-nav">
+                    <li><a href="/">Photos</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li id="user-info" style="display: none;">
+                        <div class="navbar-brand" id="user-name"></div>
+                        <div class="navbar-brand"><a href="#" id="logout-button">Logout</a></div>
+                    </li>
+                    <li id="login-container">
+                        <div class="navbar-brand"><a href="#" id="login-button">Sign in with Google</a></div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="container">
+            <h3>Photos</h3>
+
+            <a href="/add-photo.html" id="add-photo-button" class="btn btn-success btn-sm" style="display: none;">
+                <i class="glyphicon glyphicon-plus"></i>
+                Add Photo
+            </a>
+
+            <div id="photo-gallery-container">
+                </div>
+            
+            <p id="loading-message">Loading photos...</p>
+
+        </div>
+
+        <script src="app.js"></script>
+    </body>
+</html>
