@@ -18,8 +18,6 @@ options.set_global_options(region="us-central1")
 @https_fn.on_call()
 def getphotos(req: https_fn.Request) -> https_fn.Response:
     """Fetches all photo documents from Firestore."""
-    if req.auth is None:
-        raise https_fn.HttpsError(code=https_fn.Code.UNAUTHENTICATED, message="Authentication required.")
     
     try:
         db = firestore.client()

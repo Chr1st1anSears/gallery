@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await getPhotosCallable();
         const photos = result.data;
         if (photos.length === 0) {
-          loadingMessage.textContent = 'No photos found. Add one!';
+          loadingMessage.textContent = 'No photos found.';
           return;
         }
         photos.forEach(photo => {
@@ -68,9 +68,8 @@ document.addEventListener('DOMContentLoaded', function() {
         userInfo.style.display = 'none';
         addPhotoButton.style.display = 'none';
         loginContainer.style.display = 'block';
-        photoGalleryContainer.innerHTML = '';
-        loadingMessage.style.display = 'block';
-        loadingMessage.textContent = "Please sign in to view the gallery.";
+        
+        loadPhotos()
       }
     });
 
