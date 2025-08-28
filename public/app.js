@@ -36,13 +36,19 @@ document.addEventListener('DOMContentLoaded', function() {
           const photoElement = document.createElement('div');
           photoElement.className = 'media';
           photoElement.innerHTML = `
-            <div class="media-left">
-              <img src="${photo.imageUrl}" width="175" height="175" alt="gallery photo">
-            </div>
-            <div class="media-body">
-              <h4>${photo.description || ''}</h4>
-              <p><strong>People:</strong> ${photo.peopleInPhoto || 'Unknown'}</p>
-              <p><strong>Date:</strong> ${photo.dateTaken || 'Unknown'}</p>
+            <a href="/photos/${photo.id}">
+              <div class="media-left">
+                  <img src="${photo.imageUrl}" width="175" height="175" alt="gallery photo">
+              </div>
+              <div class="media-body">
+                  <h4>${photo.description || ''}</h4>
+                  <p><strong>People:</strong> ${photo.peopleInPhoto || 'Unknown'}</p>
+                  <p><strong>Date:</strong> ${photo.dateTaken || 'Unknown'}</p>
+              </div>
+            </a>
+            <div class="media-right">
+                <a href="/edit-photo.html?id=${photo.id}" class="btn btn-default btn-sm">Edit</a>
+                <button class="btn btn-danger btn-sm delete-button" data-id="${photo.id}">Delete</button>
             </div>
           `;
           photoGalleryContainer.appendChild(photoElement);
@@ -94,4 +100,24 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error(e);
     document.getElementById('loading-message').textContent = 'Error loading Firebase SDK.';
   }
+
+// --- NEW: Event listener for delete buttons ---
+// We use event delegation since the buttons are created dynamically.
+photoGalleryContainer.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('delete-button')) {
+        const photoId = e.target.dataset.id;
+        
+        if (confirm("Are you sure you want to delete this photo?")) {
+            try {
+                const deletePhotoCallable = functions.httpsCallable('deletephoto');
+                await deletePhotoCallable({ photoId: photoId });
+                // Reload the photos to show the change
+                loadPhotos();
+            } catch (error) {
+                console.error("Error deleting photo:", error);
+                alert(`Error: ${error.message}`);
+            }
+        }
+    }
+});
 });
