@@ -1,11 +1,10 @@
-// This function runs once the page is fully loaded.
 document.addEventListener('DOMContentLoaded', function() {
   try {
     // Initialize Firebase services
     const auth = firebase.auth();
-    const functions = firebase.functions(); // Add Functions service
+    const functions = firebase.functions();
 
-    // Get references to all the HTML elements we need to interact with
+    // Get references to all the HTML elements
     const loginContainer = document.getElementById('login-container');
     const loginButton = document.getElementById('login-button');
     const logoutButton = document.getElementById('logout-button');
@@ -15,23 +14,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const photoGalleryContainer = document.getElementById('photo-gallery-container');
     const loadingMessage = document.getElementById('loading-message');
 
-    // --- NEW: Function to load and display photos ---
+    // Function to load and display photos
     const loadPhotos = async () => {
+      // (Your existing loadPhotos function code goes here, no changes needed in it)
       loadingMessage.textContent = "Loading photos...";
-      photoGalleryContainer.innerHTML = ''; // Clear previous photos
-
+      photoGalleryContainer.innerHTML = '';
       try {
-        // Get a reference to our new Python Cloud Function
         const getPhotosCallable = functions.httpsCallable('getphotos');
         const result = await getPhotosCallable();
         const photos = result.data;
-
         if (photos.length === 0) {
           loadingMessage.textContent = 'No photos found. Add one!';
           return;
         }
-
-        // Loop through the photos and create the HTML for each one
         photos.forEach(photo => {
           const photoElement = document.createElement('div');
           photoElement.className = 'media';
@@ -53,40 +48,33 @@ document.addEventListener('DOMContentLoaded', function() {
           `;
           photoGalleryContainer.appendChild(photoElement);
         });
-
-        loadingMessage.style.display = 'none'; // Hide loading message
+        loadingMessage.style.display = 'none';
       } catch (error) {
         console.error("Error fetching photos:", error);
         loadingMessage.textContent = "Error loading photos. Check the console.";
       }
     };
 
-
-    // --- Authentication Logic ---
+    // Authentication state observer
     auth.onAuthStateChanged(user => {
       if (user) {
-        // --- User is SIGNED IN ---
         userName.textContent = user.displayName || user.email;
         userInfo.style.display = 'block';
         addPhotoButton.style.display = 'inline-block';
         loginContainer.style.display = 'none';
-        
-        // Now that the user is logged in, load their photos.
         loadPhotos();
-
       } else {
-        // --- User is SIGNED OUT ---
         userName.textContent = '';
         userInfo.style.display = 'none';
         addPhotoButton.style.display = 'none';
         loginContainer.style.display = 'block';
-        photoGalleryContainer.innerHTML = ''; // Clear photos
+        photoGalleryContainer.innerHTML = '';
         loadingMessage.style.display = 'block';
         loadingMessage.textContent = "Please sign in to view the gallery.";
       }
     });
 
-    // --- Button Click Handlers ---
+    // Button Click Handlers
     loginButton.addEventListener('click', () => {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider).catch(error => console.error("Sign-in error:", error));
@@ -96,28 +84,28 @@ document.addEventListener('DOMContentLoaded', function() {
       auth.signOut().catch(error => console.error("Sign-out error:", error));
     });
 
+    // --- MOVED: Event listener for delete buttons ---
+    // This now lives inside the main try-catch block with the other listeners.
+    photoGalleryContainer.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('delete-button')) {
+            const photoId = e.target.dataset.id;
+            
+            if (confirm("Are you sure you want to delete this photo?")) {
+                try {
+                    const deletePhotoCallable = functions.httpsCallable('deletephoto');
+                    await deletePhotoCallable({ photoId: photoId });
+                    // Reload the photos to show the change
+                    loadPhotos();
+                } catch (error) {
+                    console.error("Error deleting photo:", error);
+                    alert(`Error: ${error.message}`);
+                }
+            }
+        }
+    });
+
   } catch (e) {
     console.error(e);
     document.getElementById('loading-message').textContent = 'Error loading Firebase SDK.';
   }
-
-// --- NEW: Event listener for delete buttons ---
-// We use event delegation since the buttons are created dynamically.
-photoGalleryContainer.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('delete-button')) {
-        const photoId = e.target.dataset.id;
-        
-        if (confirm("Are you sure you want to delete this photo?")) {
-            try {
-                const deletePhotoCallable = functions.httpsCallable('deletephoto');
-                await deletePhotoCallable({ photoId: photoId });
-                // Reload the photos to show the change
-                loadPhotos();
-            } catch (error) {
-                console.error("Error deleting photo:", error);
-                alert(`Error: ${error.message}`);
-            }
-        }
-    }
-});
 });
