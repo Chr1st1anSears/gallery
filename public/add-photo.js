@@ -1,30 +1,25 @@
-// public/add-photo.js
-
 document.addEventListener('DOMContentLoaded', function() {
   try {
     const auth = firebase.auth();
     const storage = firebase.storage();
-    // const functions = firebase.functions(); // We'll use this later
-    // const db = firebase.firestore(); // We'll use this later
+    const functions = firebase.functions(); // Make sure Functions is initialized
 
-    const addPhotoForm = document.getElementById('add-photo-form'); // Make sure your <form> has this ID
-    const fileInput = document.getElementById('image'); // Your <input type="file">
-    const submitButton = document.getElementById('submit-button'); // Your submit button
-
+    const addPhotoForm = document.getElementById('add-photo-form');
+    const fileInput = document.getElementById('image');
+    const submitButton = document.getElementById('submit-button');
     let currentUser = null;
 
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
       } else {
-        // If user is not logged in, redirect them to the home page
         window.location.href = '/';
         currentUser = null;
       }
     });
 
     addPhotoForm.addEventListener('submit', async (e) => {
-      e.preventDefault(); // Stop the form from submitting the traditional way
+      e.preventDefault();
 
       if (!currentUser || !fileInput.files.length) {
         alert("You must be logged in and select a file to upload.");
@@ -34,29 +29,38 @@ document.addEventListener('DOMContentLoaded', function() {
       submitButton.disabled = true;
       submitButton.textContent = 'Uploading...';
 
-      // 1. Get the selected file
       const file = fileInput.files[0];
       const filePath = `${currentUser.uid}/${Date.now()}_${file.name}`;
       const storageRef = storage.ref(filePath);
 
       try {
-        // 2. Upload the file to Cloud Storage
+        // 1. Upload the file to Cloud Storage
         const uploadTask = await storageRef.put(file);
-        console.log('File uploaded successfully!');
-
-        // 3. Get the public URL of the uploaded file
-        const downloadURL = await uploadTask.ref.getDownloadURL();
-        console.log('File available at', downloadURL);
-
-        // --- NEXT STEP will go here ---
-        // 4. Call a Cloud Function to save metadata to Firestore
         
-        alert("Photo uploaded successfully! (Next step is saving the details)");
-        window.location.href = '/'; // Redirect home for now
+        // 2. Get the public URL of the uploaded file
+        const downloadURL = await uploadTask.ref.getDownloadURL();
+
+        // --- UPDATED SECTION ---
+        // 3. Get the other form details
+        const description = document.getElementById('description').value;
+        const peopleInPhoto = document.getElementById('peopleInPhoto').value;
+        const dateTaken = document.getElementById('dateTaken').value;
+
+        // 4. Call the 'addphoto' Cloud Function with all the details
+        const addPhotoCallable = functions.httpsCallable('addphoto');
+        await addPhotoCallable({
+            imageUrl: downloadURL,
+            description: description,
+            peopleInPhoto: peopleInPhoto,
+            dateTaken: dateTaken
+        });
+
+        // 5. Redirect home to see the new photo in the gallery
+        window.location.href = '/';
 
       } catch (error) {
-        console.error("Error uploading file:", error);
-        alert("Error uploading file. Check the console.");
+        console.error("Error in the upload process:", error);
+        alert("An error occurred. Check the console.");
         submitButton.disabled = false;
         submitButton.textContent = 'Save';
       }
@@ -64,6 +68,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
   } catch (e) {
     console.error(e);
-    // Handle error loading Firebase SDK
   }
 });

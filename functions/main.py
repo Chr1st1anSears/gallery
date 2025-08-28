@@ -3,30 +3,27 @@
 # https://firebase.google.com/docs/functions/python
 
 from firebase_admin import initialize_app, firestore
-from firebase_functions import https_fn
+from firebase_functions import https_fn, options
+
+# This is a new import for our new function
+from firebase_functions.params import StringParam
 
 # Initialize the Firebase Admin SDK
 initialize_app()
 
+# Set the region for all functions in this file
+options.set_global_options(region="us-central1")
+
+
 @https_fn.on_call()
 def getphotos(req: https_fn.Request) -> https_fn.Response:
-    """
-    A callable function that fetches all photo documents from Firestore.
-    """
-    # Verify that the user is authenticated.
+    """Fetches all photo documents from Firestore."""
     if req.auth is None:
-        raise https_fn.HttpsError(
-            code=https_fn.Code.UNAUTHENTICATED,
-            message="Authentication required."
-        )
-
+        raise https_fn.HttpsError(code=https_fn.Code.UNAUTHENTICATED, message="Authentication required.")
+    
     try:
         db = firestore.client()
-        
-        # Retrieve all documents from the "photos" collection
         docs = db.collection("photos").order_by("description").stream()
-
-        # Prepare the list of photos to return
         photos = []
         for doc in docs:
             photo_data = doc.to_dict()
@@ -35,10 +32,41 @@ def getphotos(req: https_fn.Request) -> https_fn.Response:
         
         print(f"Returning {len(photos)} photos.")
         return photos
-
     except Exception as e:
         print(f"Error fetching photos: {e}")
-        raise https_fn.HttpsError(
-            code=https_fn.Code.INTERNAL,
-            message="An error occurred while fetching photos."
-        )
+        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred while fetching photos.")
+
+
+# --- NEW FUNCTION ---
+@https_fn.on_call()
+def addphoto(req: https_fn.Request) -> https_fn.Response:
+    """
+    Receives photo metadata from the client and saves it to a new
+    document in the 'photos' collection in Firestore.
+    """
+    if req.auth is None:
+        raise https_fn.HttpsError(code=https_fn.Code.UNAUTHENTICATED, message="Authentication required.")
+    
+    try:
+        # Get data sent from the front-end
+        data = req.data
+        print(f"Received photo data: {data}")
+        
+        # Prepare the data for Firestore
+        photo_doc = {
+            'imageUrl': data.get('imageUrl'),
+            'description': data.get('description'),
+            'peopleInPhoto': data.get('peopleInPhoto'),
+            'dateTaken': data.get('dateTaken'),
+            'uploaderUid': req.auth.uid # Add the uploader's ID for security/auditing
+        }
+        
+        db = firestore.client()
+        # Add a new document to the 'photos' collection
+        db.collection("photos").add(photo_doc)
+        
+        return {"status": "success", "message": "Photo details saved."}
+
+    except Exception as e:
+        print(f"Error saving photo details: {e}")
+        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred while saving photo details.")
