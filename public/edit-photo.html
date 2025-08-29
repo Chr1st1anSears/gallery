@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Edit Photo - Gallery</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        
+        <script defer src="/__/firebase/12.1.0/firebase-app-compat.js"></script>
+        <script defer src="/__/firebase/12.1.0/firebase-auth-compat.js"></script>
+        <script defer src="/__/firebase/12.1.0/firebase-firestore-compat.js"></script>
+        <script defer src="/__/firebase/12.1.0/firebase-functions-compat.js"></script>
+        <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+    </head>
+    <body>
+        <div class="navbar navbar-default">
+            </div>
+
+        <div class="container">
+            <h3>Edit Photo</h3>
+            <form id="edit-photo-form">
+                <div class="form-group">
+                    <label for="peopleInPhoto">People in Photo</label>
+                    <input type="text" name="peopleInPhoto" id="peopleInPhoto" class="form-control"/>
+                </div>
+                <div class="form-group">
+                    <label for="dateTaken">Date Taken</label>
+                    <input type="text" name="dateTaken" id="dateTaken" class="form-control"/>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea name="description" id="description" class="form-control"></textarea>
+                </div>
+                <button type="submit" id="submit-button" class="btn btn-success">Save Changes</button>
+            </form>
+        </div>
+
+        <script src="edit-photo.js"></script>
+    </body>
+</html>
