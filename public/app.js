@@ -14,22 +14,34 @@ document.addEventListener('DOMContentLoaded', function() {
     const photoGalleryContainer = document.getElementById('photo-gallery-container');
     const loadingMessage = document.getElementById('loading-message');
 
-    // Function to load and display photos
-    const loadPhotos = async () => {
-      // (Your existing loadPhotos function code goes here, no changes needed in it)
+    // --- CHANGE #1: The function now accepts a boolean, isLoggedIn ---
+    const loadPhotos = async (isLoggedIn) => {
       loadingMessage.textContent = "Loading photos...";
       photoGalleryContainer.innerHTML = '';
       try {
         const getPhotosCallable = functions.httpsCallable('getphotos');
         const result = await getPhotosCallable();
         const photos = result.data;
+
         if (photos.length === 0) {
           loadingMessage.textContent = 'No photos found.';
           return;
         }
+
         photos.forEach(photo => {
           const photoElement = document.createElement('div');
           photoElement.className = 'media';
+
+          // --- CHANGE #2: Conditionally create the buttons ---
+          // If the user is logged in, create the buttons HTML. Otherwise, create an empty string.
+          const adminButtons = isLoggedIn ? `
+            <div class="media-right">
+                <a href="/edit-photo.html?id=${photo.id}" class="btn btn-default btn-sm">Edit</a>
+                <button class="btn btn-danger btn-sm delete-button" data-id="${photo.id}">Delete</button>
+            </div>
+          ` : '';
+
+          // --- CHANGE #3: Add the buttons (or the empty string) to the template ---
           photoElement.innerHTML = `
             <a href="/photos/${photo.id}">
               <div class="media-left">
@@ -41,10 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <p><strong>Date:</strong> ${photo.dateTaken || 'Unknown'}</p>
               </div>
             </a>
-            <div class="media-right">
-                <a href="/edit-photo.html?id=${photo.id}" class="btn btn-default btn-sm">Edit</a>
-                <button class="btn btn-danger btn-sm delete-button" data-id="${photo.id}">Delete</button>
-            </div>
+            ${adminButtons}
           `;
           photoGalleryContainer.appendChild(photoElement);
         });
@@ -62,14 +71,14 @@ document.addEventListener('DOMContentLoaded', function() {
         userInfo.style.display = 'block';
         addPhotoButton.style.display = 'inline-block';
         loginContainer.style.display = 'none';
-        loadPhotos();
+        loadPhotos(true);
       } else {
         userName.textContent = '';
         userInfo.style.display = 'none';
         addPhotoButton.style.display = 'none';
         loginContainer.style.display = 'block';
         
-        loadPhotos()
+        loadPhotos(false)
       }
     });
 
