@@ -17,7 +17,7 @@
         <div class="navbar navbar-default">
             <div class="container">
                 <div class="navbar-header">
-                    <div class="navbar-brand">Gallery</div>
+                    <div class="navbar-brand" href="/">Gallery</div>
                 </div>
                 <ul class="nav navbar-nav">
                     <li><a href="/">Home</a></li>
@@ -27,33 +27,41 @@
 
         <div class="container">
             <h3>Add Photo</h3>
-
             <form id="add-photo-form">
-
                 <div class="form-group">
-                    <label for="peopleInPhoto">People in Photo</label>
-                    <input type="text" name="peopleInPhoto" id="peopleInPhoto" class="form-control"/>
+                    <label for="name">Name</label>
+                    <input type="text" name="name" id="name" class="form-control" required/>
                 </div>
-
                 <div class="form-group">
-                    <label for="dateTaken">Date Taken</label>
-                    <input type="text" name="dateTaken" id="dateTaken" class="form-control"/>
+                    <label for="date">Date</label>
+                    <input type="text" name="date" id="date" class="form-control"/>
                 </div>
-
+                <div class="form-group">
+                    <label for="people">People in Photo</label>
+                    <input type="text" name="people" id="people" class="form-control"/>
+                </div>
                 <div class="form-group">
                     <label for="description">Description</label>
                     <textarea name="description" id="description" class="form-control"></textarea>
                 </div>
-
                 <div class="form-group">
-                    <label for="image">Photo</label>
-                    <input type="file" name="image" id="image" class="form-control" accept="image/*"/>
+                    <label>Choose a photo:</label>
+                    
+                    <div>
+                        <label for="image-upload" class="btn btn-primary">Upload from Library</label>
+                        <label for="camera-input" class="btn btn-info">Take a Picture</label>
+                    </div>
+                    
+                    <input type="file" id="image-upload" style="display: none;" accept="image/*"/>
+                    <input type="file" id="camera-input" style="display: none;" accept="image/*" capture="environment"/>
+                    
+                    <p><span id="file-name" class="help-block"></span></p>
                 </div>
-
                 <button type="submit" id="submit-button" class="btn btn-success">Save</button>
             </form>
         </div>
-
         <script src="add-photo.js"></script>
+
+       
     </body>
 </html>
