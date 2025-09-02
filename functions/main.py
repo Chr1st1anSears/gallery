@@ -21,7 +21,7 @@ def getphotos(req: https_fn.Request) -> https_fn.Response:
     
     try:
         db = firestore.client()
-        docs = db.collection("photos").order_by("description").stream()
+        docs = db.collection("photos").order_by("date").stream()
         photos = []
         for doc in docs:
             photo_data = doc.to_dict()
@@ -34,8 +34,6 @@ def getphotos(req: https_fn.Request) -> https_fn.Response:
         print(f"Error fetching photos: {e}")
         raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred while fetching photos.")
 
-
-# --- NEW FUNCTION ---
 @https_fn.on_call()
 def addphoto(req: https_fn.Request) -> https_fn.Response:
     """
@@ -53,10 +51,11 @@ def addphoto(req: https_fn.Request) -> https_fn.Response:
         # Prepare the data for Firestore
         photo_doc = {
             'imageUrl': data.get('imageUrl'),
+            'name': data.get('name'),
+            'date': data.get('date'),
+            'people': data.get('people'),
             'description': data.get('description'),
-            'peopleInPhoto': data.get('peopleInPhoto'),
-            'dateTaken': data.get('dateTaken'),
-            'uploaderUid': req.auth.uid # Add the uploader's ID for security/auditing
+            'uploaderUid': req.auth.uid
         }
         
         db = firestore.client()

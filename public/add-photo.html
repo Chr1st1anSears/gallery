@@ -27,33 +27,32 @@
 
         <div class="container">
             <h3>Add Photo</h3>
-
             <form id="add-photo-form">
-
                 <div class="form-group">
-                    <label for="peopleInPhoto">People in Photo</label>
-                    <input type="text" name="peopleInPhoto" id="peopleInPhoto" class="form-control"/>
+                    <label for="name">Name</label>
+                    <input type="text" name="name" id="name" class="form-control" required/>
                 </div>
-
                 <div class="form-group">
-                    <label for="dateTaken">Date Taken</label>
-                    <input type="text" name="dateTaken" id="dateTaken" class="form-control"/>
+                    <label for="date">Date</label>
+                    <input type="text" name="date" id="date" class="form-control"/>
                 </div>
-
+                <div class="form-group">
+                    <label for="people">People in Photo</label>
+                    <input type="text" name="people" id="people" class="form-control"/>
+                </div>
                 <div class="form-group">
                     <label for="description">Description</label>
                     <textarea name="description" id="description" class="form-control"></textarea>
                 </div>
-
                 <div class="form-group">
                     <label for="image">Photo</label>
-                    <input type="file" name="image" id="image" class="form-control" accept="image/*"/>
+                    <input type="file" name="image" id="image" class="form-control" accept="image/*" required/>
                 </div>
-
                 <button type="submit" id="submit-button" class="btn btn-success">Save</button>
             </form>
         </div>
-
         <script src="add-photo.js"></script>
+
+       
     </body>
 </html>

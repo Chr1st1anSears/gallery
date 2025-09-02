@@ -42,18 +42,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // --- UPDATED SECTION ---
         // 3. Get the other form details
+        const name = document.getElementById('name').value;
+        const date = document.getElementById('date').value;
+        const people = document.getElementById('people').value;
         const description = document.getElementById('description').value;
-        const peopleInPhoto = document.getElementById('peopleInPhoto').value;
-        const dateTaken = document.getElementById('dateTaken').value;
 
-        // 4. Call the 'addphoto' Cloud Function with all the details
+        // Call the 'addphoto' Cloud Function with the new details
         const addPhotoCallable = functions.httpsCallable('addphoto');
         await addPhotoCallable({
             imageUrl: downloadURL,
-            description: description,
-            peopleInPhoto: peopleInPhoto,
-            dateTaken: dateTaken
+            name: name,
+            date: date,
+            people: people,
+            description: description
         });
+
 
         // 5. Redirect home to see the new photo in the gallery
         window.location.href = '/';

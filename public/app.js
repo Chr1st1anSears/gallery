@@ -44,13 +44,12 @@ document.addEventListener('DOMContentLoaded', function() {
           // --- CHANGE #3: Add the buttons (or the empty string) to the template ---
           photoElement.innerHTML = `
             <a href="/photos/${photo.id}">
-              <div class="media-left">
-                  <img src="${photo.imageUrl}" width="175" height="175" alt="gallery photo">
+              <div class="media-left" style="width: 320px; display: flex;">
+                  <img src="${photo.imageUrl}" style="max-width: 300px; max-height: 250px;" alt="gallery photo">
               </div>
               <div class="media-body">
-                  <h4>${photo.description || ''}</h4>
-                  <p><strong>People:</strong> ${photo.peopleInPhoto || 'Unknown'}</p>
-                  <p><strong>Date:</strong> ${photo.dateTaken || 'Unknown'}</p>
+                  <h4>${photo.name || 'Untitled'}</h4>
+                  <p><strong>Date:</strong> ${photo.date || 'Unknown'}</p>
               </div>
             </a>
             ${adminButtons}
