@@ -2,12 +2,18 @@ document.addEventListener('DOMContentLoaded', function() {
   try {
     const auth = firebase.auth();
     const storage = firebase.storage();
-    const functions = firebase.functions(); // Make sure Functions is initialized
+    const functions = firebase.functions();
 
     const addPhotoForm = document.getElementById('add-photo-form');
-    const fileInput = document.getElementById('image');
+    // NEW: Get references to both inputs and the filename display
+    const uploadInput = document.getElementById('image-upload');
+    const cameraInput = document.getElementById('camera-input');
+    const fileNameDisplay = document.getElementById('file-name');
     const submitButton = document.getElementById('submit-button');
+    
     let currentUser = null;
+    // NEW: A variable to hold the selected file
+    let selectedFile = null;
 
     auth.onAuthStateChanged(user => {
       if (user) {
@@ -18,36 +24,45 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
 
+    // NEW: A function to handle when a file is selected from either input
+    const handleFileSelect = (e) => {
+        if (e.target.files.length > 0) {
+            selectedFile = e.target.files[0];
+            fileNameDisplay.textContent = `Selected: ${selectedFile.name}`;
+        }
+    };
+    
+    // NEW: Attach this handler to both inputs
+    uploadInput.addEventListener('change', handleFileSelect);
+    cameraInput.addEventListener('change', handleFileSelect);
+
     addPhotoForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      if (!currentUser || !fileInput.files.length) {
+      // CHANGED: Check if our selectedFile variable is set
+      if (!currentUser || !selectedFile) {
         alert("You must be logged in and select a file to upload.");
         return;
       }
 
       submitButton.disabled = true;
       submitButton.textContent = 'Uploading...';
-
-      const file = fileInput.files[0];
+      
+      // Use the globally stored selectedFile
+      const file = selectedFile;
       const filePath = `${currentUser.uid}/${Date.now()}_${file.name}`;
       const storageRef = storage.ref(filePath);
 
       try {
-        // 1. Upload the file to Cloud Storage
+        // The rest of this function remains the same
         const uploadTask = await storageRef.put(file);
-        
-        // 2. Get the public URL of the uploaded file
         const downloadURL = await uploadTask.ref.getDownloadURL();
 
-        // --- UPDATED SECTION ---
-        // 3. Get the other form details
         const name = document.getElementById('name').value;
         const date = document.getElementById('date').value;
         const people = document.getElementById('people').value;
         const description = document.getElementById('description').value;
 
-        // Call the 'addphoto' Cloud Function with the new details
         const addPhotoCallable = functions.httpsCallable('addphoto');
         await addPhotoCallable({
             imageUrl: downloadURL,
@@ -57,8 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
             description: description
         });
 
-
-        // 5. Redirect home to see the new photo in the gallery
         window.location.href = '/photos.html';
 
       } catch (error) {

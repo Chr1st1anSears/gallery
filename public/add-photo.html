@@ -45,8 +45,17 @@
                     <textarea name="description" id="description" class="form-control"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="image">Photo</label>
-                    <input type="file" name="image" id="image" class="form-control" accept="image/*" required/>
+                    <label>Choose a photo:</label>
+                    
+                    <div>
+                        <label for="image-upload" class="btn btn-primary">Upload from Library</label>
+                        <label for="camera-input" class="btn btn-info">Take a Picture</label>
+                    </div>
+                    
+                    <input type="file" id="image-upload" style="display: none;" accept="image/*"/>
+                    <input type="file" id="camera-input" style="display: none;" accept="image/*" capture="environment"/>
+                    
+                    <p><span id="file-name" class="help-block"></span></p>
                 </div>
                 <button type="submit" id="submit-button" class="btn btn-success">Save</button>
             </form>
