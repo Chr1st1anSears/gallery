@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
           // --- CHANGE #3: Add the buttons (or the empty string) to the template ---
           photoElement.innerHTML = `
-            <a href="/photos/${photo.id}">
+            <a href="/view-photo.html?id=${photo.id}">
               <div class="media-left" style="width: 320px; display: flex;">
                   <img src="${photo.imageUrl}" style="max-width: 300px; max-height: 250px;" alt="gallery photo">
               </div>
