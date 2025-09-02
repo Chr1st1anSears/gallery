@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
           });
       } else {
         // Redirect if not logged in
-        window.location.href = '/';
+        window.location.href = '/photos.html';
       }
     });
 
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const editPhotoCallable = functions.httpsCallable('editphoto');
             await editPhotoCallable({ photoId: photoId, updatedData: updatedData });
-            window.location.href = '/'; // Redirect home on success
+            window.location.href = '/photos.html'; // Redirect home on success
         } catch (error) {
             console.error("Error updating photo:", error);
             alert(`Error: ${error.message}`);

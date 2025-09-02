@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (user) {
         currentUser = user;
       } else {
-        window.location.href = '/';
+        window.location.href = '/photos.html';
         currentUser = null;
       }
     });
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
         // 5. Redirect home to see the new photo in the gallery
-        window.location.href = '/';
+        window.location.href = '/photos.html';
 
       } catch (error) {
         console.error("Error in the upload process:", error);
