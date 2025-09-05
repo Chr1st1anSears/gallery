@@ -1,3 +1,5 @@
+# functions/main.py
+
 import urllib.parse
 import re
 import base64
@@ -141,6 +143,7 @@ def deletephoto(req: https_fn.Request) -> https_fn.Response:
     except Exception as e:
         print(f"Error deleting photo: {e}")
         raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
+
 
 # A helper function to parse URLs, used in findphotobymatch
 def get_gcs_uri_from_url(image_url: str) -> str | None:
