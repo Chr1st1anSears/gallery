@@ -8,6 +8,8 @@
         
         <script defer src="/__/firebase/12.1.0/firebase-app-compat.js"></script>
         <script defer src="/__/firebase/12.1.0/firebase-auth-compat.js"></script>
+        <script defer src="/__/firebase/12.1.0/firebase-firestore-compat.js"></script>
+        <script defer src="/__/firebase/12.1.0/firebase-functions-compat.js"></script>
         <script defer src="/__/firebase/init.js"></script>
     </head>
     <body>
@@ -31,9 +33,21 @@
             </div>
         </div>
 
-        <div class="container">
-            <h3>Welcome to Gallery</h3>
-            <p>Soon this will do stuff with your camera!</p>
+        <div class="container" style="text-align: center; padding-top: 50px;">
+            <h3>Point your camera at a photo on the wall, and we'll tell you about it.</h3>
+            <p><i>Try to capture the whole photo, but just that photo!</i></p>
+            
+            <!-- This is the main button the user will press -->
+            <button id="scan-photo-button" class="btn btn-primary btn-lg">
+                <span class="glyphicon glyphicon-camera"></span>
+                Scan Photo
+            </button>
+
+            <!-- This hidden input is what the button will trigger -->
+            <input type="file" id="camera-input" style="display: none;" accept="image/*" capture="environment"/>
+            
+            <!-- This div will show status messages like "Searching..." -->
+            <div id="status-message" style="padding-top: 20px;"></div>
         </div>
 
         <script src="app.js"></script>
