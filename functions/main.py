@@ -13,17 +13,6 @@ initialize_app()
 options.set_global_options(region="us-central1")
 
 
-# A helper function to parse URLs, used in findphotobymatch
-def get_gcs_uri_from_url(image_url: str) -> str | None:
-    if not image_url: return None
-    match = re.search(r"/(b|bucket)/([^/]+)/(o|object)/([^?]+)", image_url)
-    if match:
-        bucket_name = match.group(2)
-        object_path = urllib.parse.unquote(match.group(4))
-        return f"gs://{bucket_name}/{object_path}"
-    return None
-
-
 @https_fn.on_call()
 def getphotos(req: https_fn.Request) -> https_fn.Response:
     """Fetches all photo documents from Firestore."""
@@ -67,7 +56,7 @@ def getphotodetails(req: https_fn.Request) -> https_fn.Response:
     """Fetches a single photo document from Firestore by its ID."""
     photo_id = req.data.get("photoId")
     if not photo_id:
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.INVALID_ARGUMENT, message="photoId is required.")
+        raise https_fn.HttpsError(code=https_fn.Code.INVALID_ARGUMENT, message="photoId is required.")
         
     try:
         db = firestore.client()
@@ -75,10 +64,10 @@ def getphotodetails(req: https_fn.Request) -> https_fn.Response:
         if doc.exists:
             return doc.to_dict()
         else:
-            raise https_fn.HttpsError(code=https_fn.HttpsError.Code.NOT_FOUND, message="Photo not found.")
+            raise https_fn.HttpsError(code=https_fn.Code.NOT_FOUND, message="Photo not found.")
     except Exception as e:
         print(f"Error fetching photo details: {e}")
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.INTERNAL, message="An error occurred.")
+        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
 
 
 @https_fn.on_call()
@@ -152,6 +141,15 @@ def deletephoto(req: https_fn.Request) -> https_fn.Response:
         print(f"Error deleting photo: {e}")
         raise https_fn.HttpsError(code=https_fn.HttpsError.Code.INTERNAL, message="An error occurred.")
 
+# A helper function to parse URLs, used in findphotobymatch
+def get_gcs_uri_from_url(image_url: str) -> str | None:
+    if not image_url: return None
+    match = re.search(r"/(b|bucket)/([^/]+)/(o|object)/([^?]+)", image_url)
+    if match:
+        bucket_name = match.group(2)
+        object_path = urllib.parse.unquote(match.group(4))
+        return f"gs://{bucket_name}/{object_path}"
+    return None
 
 @https_fn.on_call()
 def findphotobymatch(req: https_fn.Request) -> https_fn.Response:
