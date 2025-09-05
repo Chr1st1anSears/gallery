@@ -15,7 +15,7 @@ initialize_app()
 options.set_global_options(region="us-central1")
 
 
-@https_fn.on_call()
+@https_fn.on_call(memory=options.MemoryOption.GB_1)
 def getphotos(req: https_fn.Request) -> https_fn.Response:
     """Fetches all photo documents from Firestore."""
     try:
@@ -32,7 +32,7 @@ def getphotos(req: https_fn.Request) -> https_fn.Response:
         print(f"Error fetching photos: {e}")
         raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
 
-@https_fn.on_call()
+@https_fn.on_call(memory=options.MemoryOption.GB_1)
 def addphoto(req: https_fn.Request) -> https_fn.Response:
     """Saves photo metadata to a new document in Firestore."""
     if req.auth is None:
@@ -56,7 +56,7 @@ def addphoto(req: https_fn.Request) -> https_fn.Response:
         print(f"Error saving photo details: {e}")
         raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
 
-@https_fn.on_call()
+@https_fn.on_call(memory=options.MemoryOption.GB_1)
 def getphotodetails(req: https_fn.Request) -> https_fn.Response:
     """Fetches a single photo document from Firestore by its ID."""
     photo_id = req.data.get("photoId")
@@ -74,7 +74,7 @@ def getphotodetails(req: https_fn.Request) -> https_fn.Response:
         print(f"Error fetching photo details: {e}")
         raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
 
-@https_fn.on_call()
+@https_fn.on_call(memory=options.MemoryOption.GB_1)
 def editphoto(req: https_fn.Request) -> https_fn.Response:
     """Updates a photo document in Firestore."""
     if req.auth is None:
@@ -104,7 +104,7 @@ def editphoto(req: https_fn.Request) -> https_fn.Response:
         print(f"Error updating photo: {e}")
         raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
 
-@https_fn.on_call()
+@https_fn.on_call(memory=options.MemoryOption.GB_1)
 def deletephoto(req: https_fn.Request) -> https_fn.Response:
     """Deletes a photo's Firestore document and its file in Cloud Storage."""
     if req.auth is None:
@@ -155,7 +155,7 @@ def get_gcs_uri_from_url(image_url: str) -> str | None:
         return f"gs://{bucket_name}/{object_path}"
     return None
 
-@https_fn.on_call()
+@https_fn.on_call(memory=options.MemoryOption.GB_1)
 def findphotobymatch(req: https_fn.Request) -> https_fn.Response:
     """
     Receives an image, finds the closest match in the Vector Search index,
