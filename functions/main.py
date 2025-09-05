@@ -28,28 +28,31 @@ def getphotos(req: https_fn.Request) -> https_fn.Response:
         return photos
     except Exception as e:
         print(f"Error fetching photos: {e}")
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.INTERNAL, message="An error occurred.")
-
+        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
 
 @https_fn.on_call()
 def addphoto(req: https_fn.Request) -> https_fn.Response:
     """Saves photo metadata to a new document in Firestore."""
     if req.auth is None:
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.UNAUTHENTICATED, message="Authentication required.")
+        raise https_fn.HttpsError(code=https_fn.Code.UNAUTHENTICATED, message="Authentication required.")
     
     try:
         data = req.data
+        print(f"Received photo data: {data}")
         photo_doc = {
-            'imageUrl': data.get('imageUrl'), 'name': data.get('name'), 'date': data.get('date'),
-            'people': data.get('people'), 'description': data.get('description'), 'uploaderUid': req.auth.uid
+            'imageUrl': data.get('imageUrl'),
+            'name': data.get('name'),
+            'date': data.get('date'),
+            'people': data.get('people'),
+            'description': data.get('description'),
+            'uploaderUid': req.auth.uid
         }
         db = firestore.client()
         db.collection("photos").add(photo_doc)
         return {"status": "success", "message": "Photo details saved."}
     except Exception as e:
         print(f"Error saving photo details: {e}")
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.INTERNAL, message="An error occurred.")
-
+        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
 
 @https_fn.on_call()
 def getphotodetails(req: https_fn.Request) -> https_fn.Response:
@@ -69,19 +72,18 @@ def getphotodetails(req: https_fn.Request) -> https_fn.Response:
         print(f"Error fetching photo details: {e}")
         raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
 
-
 @https_fn.on_call()
 def editphoto(req: https_fn.Request) -> https_fn.Response:
     """Updates a photo document in Firestore."""
     if req.auth is None:
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.UNAUTHENTICATED, message="Authentication required.")
+        raise https_fn.HttpsError(code=https_fn.Code.UNAUTHENTICATED, message="Authentication required.")
     
     data = req.data
     photo_id = data.get("photoId")
     updated_data = data.get("updatedData")
 
     if not photo_id or not updated_data:
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.INVALID_ARGUMENT, message="photoId and updatedData are required.")
+        raise https_fn.HttpsError(code=https_fn.Code.INVALID_ARGUMENT, message="photoId and updatedData are required.")
 
     try:
         db = firestore.client()
@@ -89,27 +91,26 @@ def editphoto(req: https_fn.Request) -> https_fn.Response:
         doc = doc_ref.get()
 
         if not doc.exists:
-            raise https_fn.HttpsError(code=https_fn.HttpsError.Code.NOT_FOUND, message="Photo not found.")
+            raise https_fn.HttpsError(code=https_fn.Code.NOT_FOUND, message="Photo not found.")
         
         if doc.get('uploaderUid') != req.auth.uid:
-            raise https_fn.HttpsError(code=https_fn.HttpsError.Code.PERMISSION_DENIED, message="You do not have permission to edit this photo.")
+            raise https_fn.HttpsError(code=https_fn.Code.PERMISSION_DENIED, message="You do not have permission to edit this photo.")
 
         doc_ref.update(updated_data)
         return {"status": "success", "message": "Photo updated."}
     except Exception as e:
         print(f"Error updating photo: {e}")
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.INTERNAL, message="An error occurred.")
-
+        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
 
 @https_fn.on_call()
 def deletephoto(req: https_fn.Request) -> https_fn.Response:
     """Deletes a photo's Firestore document and its file in Cloud Storage."""
     if req.auth is None:
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.UNAUTHENTICATED, message="Authentication required.")
+        raise https_fn.HttpsError(code=https_fn.Code.UNAUTHENTICATED, message="Authentication required.")
 
     photo_id = req.data.get("photoId")
     if not photo_id:
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.INVALID_ARGUMENT, message="photoId is required.")
+        raise https_fn.HttpsError(code=https_fn.Code.INVALID_ARGUMENT, message="photoId is required.")
         
     try:
         db = firestore.client()
@@ -117,10 +118,10 @@ def deletephoto(req: https_fn.Request) -> https_fn.Response:
         doc = doc_ref.get()
 
         if not doc.exists:
-            raise https_fn.HttpsError(code=https_fn.HttpsError.Code.NOT_FOUND, message="Photo not found.")
+            raise https_fn.HttpsError(code=https_fn.Code.NOT_FOUND, message="Photo not found.")
         
         if doc.get('uploaderUid') != req.auth.uid:
-            raise https_fn.HttpsError(code=https_fn.HttpsError.Code.PERMISSION_DENIED, message="You do not have permission to delete this photo.")
+            raise https_fn.HttpsError(code=https_fn.Code.PERMISSION_DENIED, message="You do not have permission to delete this photo.")
         
         image_url = doc.get('imageUrl')
         if image_url:
@@ -139,7 +140,7 @@ def deletephoto(req: https_fn.Request) -> https_fn.Response:
         return {"status": "success", "message": "Photo deleted."}
     except Exception as e:
         print(f"Error deleting photo: {e}")
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.INTERNAL, message="An error occurred.")
+        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
 
 # A helper function to parse URLs, used in findphotobymatch
 def get_gcs_uri_from_url(image_url: str) -> str | None:
