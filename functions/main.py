@@ -5,6 +5,7 @@ import re
 import base64
 from firebase_admin import initialize_app, firestore, storage
 from firebase_functions import https_fn, options
+from firebase_functions.https_fn import CallableRequest
 from vertexai.vision_models import Image as VertexImage, MultiModalEmbeddingModel
 from google.cloud import aiplatform
 
@@ -75,7 +76,7 @@ def getphotodetails(req: https_fn.Request) -> https_fn.Response:
         raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
 
 @https_fn.on_call(memory=options.MemoryOption.GB_1)
-def editphoto(req: https_fn.Request) -> https_fn.Response:
+def editphoto(req: CallableRequest) -> any:
     """Updates a photo document in Firestore."""
     if req.auth is None:
         raise https_fn.HttpsError(code=https_fn.Code.UNAUTHENTICATED, message="Authentication required.")
