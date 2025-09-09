@@ -95,9 +95,6 @@ def editphoto(req: CallableRequest) -> any:
 
         if not doc.exists:
             raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.NOT_FOUND, message="Photo not found.")
-        
-        if doc.to_dict().get('uploaderUid') != req.auth.uid:
-            raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.PERMISSION_DENIED, message="You do not have permission to edit this photo.")
 
         doc_ref.update(updated_data)
         return {"status": "success", "message": "Photo updated."}
@@ -122,9 +119,6 @@ def deletephoto(req: https_fn.Request) -> https_fn.Response:
 
         if not doc.exists:
             raise https_fn.HttpsError(code=https_fn.Code.NOT_FOUND, message="Photo not found.")
-        
-        if doc.get('uploaderUid') != req.auth.uid:
-            raise https_fn.HttpsError(code=https_fn.Code.PERMISSION_DENIED, message="You do not have permission to delete this photo.")
         
         image_url = doc.get('imageUrl')
         if image_url:
