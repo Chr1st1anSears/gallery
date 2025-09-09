@@ -9,7 +9,7 @@ from firebase_functions.https_fn import CallableRequest
 from vertexai.vision_models import Image as VertexImage, MultiModalEmbeddingModel
 from google.cloud import aiplatform
 
-# Initialize the Firebase Admin SDK ONCE at the top.
+# Initialize the Firebase Admin SDK
 initialize_app()
 
 # Set the region for all functions in this file
