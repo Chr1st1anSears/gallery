@@ -96,7 +96,7 @@ def editphoto(req: CallableRequest) -> any:
         if not doc.exists:
             raise https_fn.HttpsError(code=https_fn.Code.NOT_FOUND, message="Photo not found.")
         
-        if doc.get('uploaderUid') != req.auth.uid:
+        if doc.to_dict().get('uploaderUid') != req.auth.uid:
             raise https_fn.HttpsError(code=https_fn.Code.PERMISSION_DENIED, message="You do not have permission to edit this photo.")
 
         doc_ref.update(updated_data)
