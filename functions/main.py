@@ -79,14 +79,14 @@ def getphotodetails(req: https_fn.Request) -> https_fn.Response:
 def editphoto(req: CallableRequest) -> any:
     """Updates a photo document in Firestore."""
     if req.auth is None:
-        raise https_fn.HttpsError(code=https_fn.Code.UNAUTHENTICATED, message="Authentication required.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.UNAUTHENTICATED, message="Authentication required.")
     
     data = req.data
     photo_id = data.get("photoId")
     updated_data = data.get("updatedData")
 
     if not photo_id or not updated_data:
-        raise https_fn.HttpsError(code=https_fn.Code.INVALID_ARGUMENT, message="photoId and updatedData are required.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT, message="photoId and updatedData are required.")
 
     try:
         db = firestore.client()
@@ -94,16 +94,13 @@ def editphoto(req: CallableRequest) -> any:
         doc = doc_ref.get()
 
         if not doc.exists:
-            raise https_fn.HttpsError(code=https_fn.Code.NOT_FOUND, message="Photo not found.")
-        
-        if doc.get('uploaderUid') != req.auth.uid:
-            raise https_fn.HttpsError(code=https_fn.Code.PERMISSION_DENIED, message="You do not have permission to edit this photo.")
+            raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.NOT_FOUND, message="Photo not found.")
 
         doc_ref.update(updated_data)
         return {"status": "success", "message": "Photo updated."}
     except Exception as e:
         print(f"Error updating photo: {e}")
-        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INTERNAL, message="An error occurred.")
 
 @https_fn.on_call(memory=options.MemoryOption.GB_1)
 def deletephoto(req: https_fn.Request) -> https_fn.Response:
@@ -122,9 +119,6 @@ def deletephoto(req: https_fn.Request) -> https_fn.Response:
 
         if not doc.exists:
             raise https_fn.HttpsError(code=https_fn.Code.NOT_FOUND, message="Photo not found.")
-        
-        if doc.get('uploaderUid') != req.auth.uid:
-            raise https_fn.HttpsError(code=https_fn.Code.PERMISSION_DENIED, message="You do not have permission to delete this photo.")
         
         image_url = doc.get('imageUrl')
         if image_url:
