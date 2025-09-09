@@ -17,7 +17,7 @@ options.set_global_options(region="us-central1")
 
 
 @https_fn.on_call(memory=options.MemoryOption.GB_1)
-def getphotos(req: https_fn.Request) -> https_fn.Response:
+def getphotos(req: CallableRequest) -> any:
     """Fetches all photo documents from Firestore."""
     try:
         db = firestore.client()
@@ -31,13 +31,13 @@ def getphotos(req: https_fn.Request) -> https_fn.Response:
         return photos
     except Exception as e:
         print(f"Error fetching photos: {e}")
-        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INTERNAL, message="An error occurred.")
 
 @https_fn.on_call(memory=options.MemoryOption.GB_1)
-def addphoto(req: https_fn.Request) -> https_fn.Response:
+def addphoto(req: CallableRequest) -> any:
     """Saves photo metadata to a new document in Firestore."""
     if req.auth is None:
-        raise https_fn.HttpsError(code=https_fn.Code.UNAUTHENTICATED, message="Authentication required.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.UNAUTHENTICATED, message="Authentication required.")
     
     try:
         data = req.data
@@ -55,14 +55,14 @@ def addphoto(req: https_fn.Request) -> https_fn.Response:
         return {"status": "success", "message": "Photo details saved."}
     except Exception as e:
         print(f"Error saving photo details: {e}")
-        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INTERNAL, message="An error occurred.")
 
 @https_fn.on_call(memory=options.MemoryOption.GB_1)
-def getphotodetails(req: https_fn.Request) -> https_fn.Response:
+def getphotodetails(req: CallableRequest) -> any:
     """Fetches a single photo document from Firestore by its ID."""
     photo_id = req.data.get("photoId")
     if not photo_id:
-        raise https_fn.HttpsError(code=https_fn.Code.INVALID_ARGUMENT, message="photoId is required.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT, message="photoId is required.")
         
     try:
         db = firestore.client()
@@ -70,10 +70,10 @@ def getphotodetails(req: https_fn.Request) -> https_fn.Response:
         if doc.exists:
             return doc.to_dict()
         else:
-            raise https_fn.HttpsError(code=https_fn.Code.NOT_FOUND, message="Photo not found.")
+            raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.NOT_FOUND, message="Photo not found.")
     except Exception as e:
         print(f"Error fetching photo details: {e}")
-        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INTERNAL, message="An error occurred.")
 
 @https_fn.on_call(memory=options.MemoryOption.GB_1)
 def editphoto(req: CallableRequest) -> any:
@@ -103,14 +103,14 @@ def editphoto(req: CallableRequest) -> any:
         raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INTERNAL, message="An error occurred.")
 
 @https_fn.on_call(memory=options.MemoryOption.GB_1)
-def deletephoto(req: https_fn.Request) -> https_fn.Response:
+def deletephoto(req: CallableRequest) -> any:
     """Deletes a photo's Firestore document and its file in Cloud Storage."""
     if req.auth is None:
-        raise https_fn.HttpsError(code=https_fn.Code.UNAUTHENTICATED, message="Authentication required.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.UNAUTHENTICATED, message="Authentication required.")
 
     photo_id = req.data.get("photoId")
     if not photo_id:
-        raise https_fn.HttpsError(code=https_fn.Code.INVALID_ARGUMENT, message="photoId is required.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT, message="photoId is required.")
         
     try:
         db = firestore.client()
@@ -118,8 +118,8 @@ def deletephoto(req: https_fn.Request) -> https_fn.Response:
         doc = doc_ref.get()
 
         if not doc.exists:
-            raise https_fn.HttpsError(code=https_fn.Code.NOT_FOUND, message="Photo not found.")
-        
+            raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.NOT_FOUND, message="Photo not found.")
+                   
         image_url = doc.get('imageUrl')
         if image_url:
             bucket = storage.bucket()
@@ -137,7 +137,7 @@ def deletephoto(req: https_fn.Request) -> https_fn.Response:
         return {"status": "success", "message": "Photo deleted."}
     except Exception as e:
         print(f"Error deleting photo: {e}")
-        raise https_fn.HttpsError(code=https_fn.Code.INTERNAL, message="An error occurred.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INTERNAL, message="An error occurred.")
 
 
 # A helper function to parse URLs, used in findphotobymatch
@@ -151,17 +151,16 @@ def get_gcs_uri_from_url(image_url: str) -> str | None:
     return None
 
 @https_fn.on_call(memory=options.MemoryOption.GB_1)
-def findphotobymatch(req: https_fn.Request) -> https_fn.Response:
+def findphotobymatch(req: CallableRequest) -> any:
     """
     Receives an image, finds the closest match in the Vector Search index,
     and returns the corresponding Firestore document ID.
     """
     ENDPOINT_ID = "7942821421518946304"
-    # THE FIX: Use the DEPLOYED Index name, not the numeric Index resource ID.
     DEPLOYED_INDEX_ID = "v2_1757010436651" 
 
     if not req.data or not req.data.get("image"):
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.INVALID_ARGUMENT, message="Image data is required.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT, message="Image data is required.")
         
     try:
         image_string = req.data["image"]
@@ -190,19 +189,11 @@ def findphotobymatch(req: https_fn.Request) -> https_fn.Response:
         
         db = firestore.client()
         photos_ref = db.collection("photos")
-        
-        # --- DEBUGGING: Print the value from Vector Search ---
-        print(f"--- DEBUG: Matched GCS URI from Vector Search: '{matched_gcs_uri}'")
-
         docs = photos_ref.stream()
         for doc in docs:
             photo_data = doc.to_dict()
             image_url = photo_data.get("imageUrl", "")
             doc_gcs_uri = get_gcs_uri_from_url(image_url)
-            
-            # --- DEBUGGING: Print the value we are comparing against ---
-            print(f"--- DEBUG: Comparing against Firestore Doc ID {doc.id} with parsed URI: '{doc_gcs_uri}'")
-
             if doc_gcs_uri == matched_gcs_uri:
                 print(f"Found matching Firestore document: {doc.id}")
                 return {"photoId": doc.id}
@@ -212,4 +203,4 @@ def findphotobymatch(req: https_fn.Request) -> https_fn.Response:
 
     except Exception as e:
         print(f"Error in findphotobymatch: {e}")
-        raise https_fn.HttpsError(code=https_fn.HttpsError.Code.INTERNAL, message="An error occurred during the visual search.")
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INTERNAL, message="An error occurred during the visual search.")
