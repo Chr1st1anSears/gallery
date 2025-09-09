@@ -9,7 +9,7 @@ from google.cloud import aiplatform
 PROJECT_ID = "gallery-469818"
 REGION = "us-central1"
 # TODO: Update with the new numeric ID of your STREAMING index
-INDEX_ID = "5341464871131152384" 
+INDEX_ID = "2593143198528307200" 
 ENDPOINT_ID = "7942821421518946304" # This can stay the same
 # ---------------------
 

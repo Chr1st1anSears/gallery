@@ -13,7 +13,7 @@ from google.cloud import aiplatform
 # --- Configuration ---
 PROJECT_ID = "gallery-469818"
 REGION = "us-central1"
-INDEX_ID = "5341464871131152384" 
+INDEX_ID = "2593143198528307200" 
 ENDPOINT_ID = "7942821421518946304"
 # ---------------------
 
