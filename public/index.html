@@ -4,6 +4,7 @@
         <title>Gallery</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- Note: I'm keeping Bootstrap for the navbar, but the main content will use custom styles. -->
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
         
         <!-- Firebase SDKs -->
@@ -16,39 +17,86 @@
         <!-- Google Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;1,400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 
         <style>
-            /* --- Font Styling --- */
+            /* --- Page Layout & Background --- */
+            body, html {
+                height: 100%;
+                margin: 0;
+                display: flex;
+                flex-direction: column; /* Allows navbar at top, main content to fill rest */
+            }
 
-            /* 1. Use Playfair Display for the navbar */
+            .main-content {
+                flex-grow: 1; /* Makes this container take up all available space */
+                display: flex;
+                align-items: flex-start; /* Vertically centers the frame */
+                justify-content: center; /* Horizontally centers the frame */
+                padding: 0px;
+                box-sizing: border-box;
+            }
+
+            /* --- Frame Styling --- */
+            .frame-container {
+                /* IMPORTANT: Make sure you save your uploaded image as 'homepage_frame.jpg' in your /public folder */
+                background-image: url('/homepage_background.jpg');
+                background-size: 100% 100%; /* Stretches the frame to fit the container */
+                background-repeat: no-repeat;
+                
+                width: auto;
+                height: auto;
+                aspect-ratio: 3 / 4; /* Ensures the container keeps the frame's shape */
+                
+                display: flex;
+                flex-direction: column;
+                align-items: center; /* Horizontally centers content inside the frame */
+                justify-content: center; /* Vertically centers content inside the frame */
+                
+                padding: 20% 18%; /* Pushes the content away from the frame's edges */
+                box-sizing: border-box;
+                text-align: center;
+            }
+
+            /* --- Font Styling --- */
             .navbar.navbar-default {
                 font-family: 'Playfair Display', serif;
-                font-weight: 700; /* Use the bold weight we imported */
-            }
-            .navbar-brand, .nav > li > a {
-                 font-size: 18px; /* Slightly increase navbar font size */
-            }
-
-
-            /* 2. Use Playfair Display for the Scan Photo button */
-            #scan-photo-button {
-                font-family: 'EB Garamond', serif;
                 font-weight: 700;
-                font-size: 22px; /* Make the button text a bit larger */
-                margin-top: 20px; /* Add some space above the button */
+                flex-shrink: 0; /* Prevents navbar from shrinking */
+
+                margin-bottom: 0;
+                border-bottom: none;
+                border-radius: 0; 
+            }
+             .navbar-brand, .nav > li > a {
+                 font-size: 18px;
             }
 
-            /* 3. Use EB Garamond for the prompt text */
-            .prompt-text {
+            .prompt-text, #scan-photo-button {
                 font-family: 'EB Garamond', serif;
             }
             .prompt-text h3 {
-                font-size: 28px;
+                font-size: 26px;
+                font-weight: 700; /* Bolder Garamond for the title */
             }
             .prompt-text p {
                 font-size: 18px;
+                margin-top: 15px;
             }
+            #scan-photo-button {
+                font-size: 20px;
+                margin-top: 25px;
+            }
+
+            #status-message {
+                font-family: 'EB Garamond', serif;
+                font-style: italic;
+                font-size: 16px;
+                margin-top: 20px; /* Add space above the message */
+                color: #555;
+                min-height: 20px; /* Prevents layout shift when text appears */
+            }
+
         </style>
     </head>
     <body>
@@ -72,21 +120,28 @@
             </div>
         </div>
 
-        <!-- Added a wrapper div with a class for easier styling -->
-        <div class="container prompt-text" style="text-align: center; padding-top: 50px;">
-            <h3>Choose a photo and we'll tell you its tale.</h3>
-            <p><i>Stand close, zoom in, and try to minimize glare!</i></p>
-            
-            <button id="scan-photo-button" class="btn btn-primary btn-lg">
-                <span class="glyphicon glyphicon-camera"></span>
-                Scan Photo
-            </button>
+        <!-- This is the main content area that will be centered on the page -->
+        <main class="main-content">
+            <!-- This container IS the frame -->
+            <div class="frame-container">
+                <!-- This content lives INSIDE the frame -->
+                <div class="prompt-text">
+                    <h3>Choose a photo, we'll tell you its tale</h3>
+                    <p><i>Stand close, zoom in, and try to minimize glare!</i></p>
+                </div>
+                
+                <button id="scan-photo-button" class="btn btn-primary btn-lg">
+                    <span class="glyphicon glyphicon-camera"></span>
+                    Scan Photo
+                </button>
 
-            <input type="file" id="camera-input" style="display: none;" accept="image/*" capture="environment"/>
-            
-            <div id="status-message" style="padding-top: 20px;"></div>
-        </div>
-
+                <div id="status-message"></div>
+            </div>
+        </main>
+        
+        <!-- These elements are needed by the JS but don't need to be inside the frame -->
+        <input type="file" id="camera-input" style="display: none;" accept="image/*" capture="environment"/>
+                
         <script src="app.js"></script>
     </body>
 </html>
