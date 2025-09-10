@@ -210,7 +210,7 @@ def findphotobymatch(req: CallableRequest) -> any:
         index_endpoint = aiplatform.MatchingEngineIndexEndpoint(index_endpoint_name=ENDPOINT_ID)
         
         neighbors = index_endpoint.find_neighbors(
-            deployed_index_id="v2_1757010436651", # This should be the deployed index ID
+            deployed_index_id="v3_deployment_1757447059850", # This should be the deployed index ID
             queries=[query_embedding],
             num_neighbors=1
         )
