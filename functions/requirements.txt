@@ -3,4 +3,4 @@
 firebase-functions==0.2.0
 firebase-admin==6.5.0
 google-cloud-storage==2.14.0
-google-cloud-aiplatform==1.38.1
+google-cloud-aiplatform==1.47.0
