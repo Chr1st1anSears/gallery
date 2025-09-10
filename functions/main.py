@@ -17,6 +17,15 @@ INDEX_ID = "2593143198528307200"
 ENDPOINT_ID = "7942821421518946304"
 # ---------------------
 
+# --- Allow list ---
+AUTHORIZED_USERS = [
+    "crsears1995@gmail.com",
+    "crsears@google.com",
+    "vorobyshek077@gmail.com",
+    "vorobeva@bc.edu",
+]
+# ------------------
+
 initialize_app()
 aiplatform.init(project=PROJECT_ID, location=REGION)
 
@@ -55,6 +64,10 @@ def addphoto(req: CallableRequest) -> any:
     if req.auth is None:
         raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.UNAUTHENTICATED, message="Authentication required.")
     
+    user_email = req.auth.token.get("email")
+    if user_email not in AUTHORIZED_USERS:
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.PERMISSION_DENIED, message="You do not have permission to perform this action.")
+
     try:
         data = req.data
         image_url = data.get('imageUrl')
@@ -118,6 +131,10 @@ def editphoto(req: CallableRequest) -> any:
     if req.auth is None:
         raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.UNAUTHENTICATED, message="Authentication required.")
     
+    user_email = req.auth.token.get("email")
+    if user_email not in AUTHORIZED_USERS:
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.PERMISSION_DENIED, message="You do not have permission to perform this action.")
+
     data = req.data
     photo_id = data.get("photoId")
     updated_data = data.get("updatedData")
@@ -144,6 +161,10 @@ def deletephoto(req: CallableRequest) -> any:
     """Deletes a photo from Firestore, Storage, AND the Vector Search index."""
     if req.auth is None:
         raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.UNAUTHENTICATED, message="Authentication required.")
+
+    user_email = req.auth.token.get("email")
+    if user_email not in AUTHORIZED_USERS:
+        raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.PERMISSION_DENIED, message="You do not have permission to perform this action.")
 
     photo_id = req.data.get("photoId")
     if not photo_id:

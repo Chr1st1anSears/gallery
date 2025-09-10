@@ -1,10 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
   try {
-    // Initialize Firebase services
     const auth = firebase.auth();
     const functions = firebase.functions();
-
-    // Get references to all the HTML elements
+    const AUTHORIZED_USERS = [
+        "crsears1995@gmail.com",
+        "crsears@google.com",
+        "vorobyshek077@gmail.com",
+        "vorobeva@bc.edu",
+    ];  
     const loginContainer = document.getElementById('login-container');
     const loginButton = document.getElementById('login-button');
     const logoutButton = document.getElementById('logout-button');
@@ -14,8 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const photoGalleryContainer = document.getElementById('photo-gallery-container');
     const loadingMessage = document.getElementById('loading-message');
 
-    // --- CHANGE #1: The function now accepts a boolean, isLoggedIn ---
-    const loadPhotos = async (isLoggedIn) => {
+    const loadPhotos = async (isAuthorized) => {
       loadingMessage.textContent = "Loading photos...";
       photoGalleryContainer.innerHTML = '';
       try {
@@ -32,16 +34,14 @@ document.addEventListener('DOMContentLoaded', function() {
           const photoElement = document.createElement('div');
           photoElement.className = 'media';
 
-          // --- CHANGE #2: Conditionally create the buttons ---
-          // If the user is logged in, create the buttons HTML. Otherwise, create an empty string.
-          const adminButtons = isLoggedIn ? `
+          // Conditionally create the buttons if the user is authorized
+          const adminButtons = isAuthorized ? `
             <div class="media-right">
                 <a href="/edit-photo.html?id=${photo.id}" class="btn btn-default btn-sm">Edit</a>
                 <button class="btn btn-danger btn-sm delete-button" data-id="${photo.id}">Delete</button>
             </div>
           ` : '';
 
-          // --- CHANGE #3: Add the buttons (or the empty string) to the template ---
           photoElement.innerHTML = `
             <a href="/view-photo.html?id=${photo.id}">
               <div class="media-left" style="width: 320px; display: flex;">
@@ -63,25 +63,35 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     };
 
-    // Authentication state observer
     auth.onAuthStateChanged(user => {
       if (user) {
+        // User is logged in.
         userName.textContent = user.displayName || user.email;
         userInfo.style.display = 'block';
-        addPhotoButton.style.display = 'inline-block';
         loginContainer.style.display = 'none';
-        loadPhotos(true);
+
+        // Check if their email is in our allowlist.
+        const isAuthorized = AUTHORIZED_USERS.includes(user.email);
+
+        // Show/hide the "Add Photo" button based on authorization.
+        addPhotoButton.style.display = isAuthorized ? 'inline-block' : 'none';
+        
+        // Load the photo list, passing authorization status to show/hide edit/delete buttons.
+        loadPhotos(isAuthorized);
+
       } else {
+        // User is logged out.
         userName.textContent = '';
         userInfo.style.display = 'none';
         addPhotoButton.style.display = 'none';
         loginContainer.style.display = 'block';
         
-        loadPhotos(false)
+        // Load photos without any admin controls.
+        loadPhotos(false);
       }
     });
 
-    // Button Click Handlers
+    // --- Button Click Handlers (Unchanged) ---
     loginButton.addEventListener('click', () => {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider).catch(error => console.error("Sign-in error:", error));
@@ -91,8 +101,6 @@ document.addEventListener('DOMContentLoaded', function() {
       auth.signOut().catch(error => console.error("Sign-out error:", error));
     });
 
-    // --- MOVED: Event listener for delete buttons ---
-    // This now lives inside the main try-catch block with the other listeners.
     photoGalleryContainer.addEventListener('click', async (e) => {
         if (e.target.classList.contains('delete-button')) {
             const photoId = e.target.dataset.id;
@@ -101,8 +109,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 try {
                     const deletePhotoCallable = functions.httpsCallable('deletephoto');
                     await deletePhotoCallable({ photoId: photoId });
-                    // Reload the photos to show the change
-                    loadPhotos();
+                    // Reload photos, assuming user is still authorized.
+                    loadPhotos(true);
                 } catch (error) {
                     console.error("Error deleting photo:", error);
                     alert(`Error: ${error.message}`);
@@ -113,6 +121,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   } catch (e) {
     console.error(e);
-    document.getElementById('loading-message').textContent = 'Error loading Firebase SDK.';
+    document.getElementById('loading-message').textContent = 'An error occurred initializing the app.';
   }
 });
