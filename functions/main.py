@@ -95,7 +95,7 @@ def addphoto(req: CallableRequest) -> any:
             'imageUrl': image_url,
             'name': data.get('name'),
             'date': data.get('date'),
-            'people': data.get('people'),
+            'relatedPhotos': data.get('relatedPhotos', []), # Get the array from the client, default to empty
             'description': data.get('description'),
             'uploaderUid': req.auth.uid
         }
@@ -117,10 +117,42 @@ def getphotodetails(req: CallableRequest) -> any:
     try:
         db = firestore.client()
         doc = db.collection("photos").document(photo_id).get()
-        if doc.exists:
-            return doc.to_dict()
-        else:
+        if not doc.exists:
             raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.NOT_FOUND, message="Photo not found.")
+        
+        photo_data = doc.to_dict()
+
+        # --- CHANGE: This is the new logic to enrich the related photos data ---
+        # It fetches the names of the related photos for the frontend to display.
+        if "relatedPhotos" in photo_data and isinstance(photo_data["relatedPhotos"], list) and photo_data["relatedPhotos"]:
+            # 1. Create a list of document references for all related photos.
+            related_doc_refs = [
+                db.collection("photos").document(related["id"])
+                for related in photo_data["relatedPhotos"] if "id" in related
+            ]
+            
+            # 2. Fetch all related documents in a single, efficient batch call.
+            related_docs = db.get_all(related_doc_refs)
+            
+            # 3. Create a simple dictionary to easily look up a doc's data by its ID.
+            related_docs_map = {doc.id: doc.to_dict() for doc in related_docs if doc.exists}
+
+            # 4. Build a new, "enriched" list of related photos.
+            enriched_related_photos = []
+            for related in photo_data["relatedPhotos"]:
+                related_id = related.get("id")
+                if related_id in related_docs_map:
+                    enriched_related_photos.append({
+                        "id": related_id,
+                        "text": related.get("text", ""),
+                        "name": related_docs_map[related_id].get("name", "Unknown Photo")
+                    })
+            
+            # 5. Replace the original list with the new one containing the names.
+            photo_data["relatedPhotos"] = enriched_related_photos
+
+        return photo_data
+
     except Exception as e:
         print(f"Error fetching photo details: {e}")
         raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INTERNAL, message="An error occurred.")
