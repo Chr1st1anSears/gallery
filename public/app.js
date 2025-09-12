@@ -15,6 +15,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const cameraInput = document.getElementById('camera-input');
     const statusMessage = document.getElementById('status-message');
 
+    // --- NEW: A function to pre-warm our critical Cloud Functions ---
+    // This runs once as soon as the page loads to reduce "cold start" latency.
+    const prewarmFunctions = () => {
+      console.log("Pre-warming Cloud Functions in the background...");
+      
+      const findPhotoCallable = functions.httpsCallable('findphotobymatch');
+      const getDetailsCallable = functions.httpsCallable('getphotodetails');
+      const getPhotosCallable = functions.httpsCallable('getphotos');
+      
+      findPhotoCallable({}).catch(() => { 
+        console.log("findphotobymatch is now warm.");
+      });
+      
+      getDetailsCallable({}).catch(() => {
+        console.log("getphotodetails is now warm.");
+      });
+
+      getPhotosCallable({}).catch(() => {
+        console.log("getphotos is now warm.");
+      });
+    };
+
+    // --- Call the pre-warming function immediately ---
+    prewarmFunctions();
+    
     // --- Navbar Auth Logic (remains the same) ---
     auth.onAuthStateChanged(user => {
       if (user) {
