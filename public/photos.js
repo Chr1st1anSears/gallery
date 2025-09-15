@@ -48,8 +48,8 @@ document.addEventListener('DOMContentLoaded', function() {
                   <img src="${photo.imageUrl}" style="max-width: 300px; max-height: 250px;" alt="gallery photo">
               </div>
               <div class="media-body">
-                  <h4>${photo.name || 'Untitled'}</h4>
-                  <p><strong>Date:</strong> ${photo.date || 'Unknown'}</p>
+                  <h4><strong>${photo.name || 'Untitled'}</strong></h4>
+                  <p>${photo.date || 'Unknown date'}</p>
               </div>
             </a>
             ${adminButtons}
