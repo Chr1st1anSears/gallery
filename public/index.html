@@ -31,7 +31,7 @@
             .main-content {
                 flex-grow: 1; /* Makes this container take up all available space */
                 display: flex;
-                align-items: flex-start; /* Vertically centers the frame */
+                align-items: flex-start; /* Aligns frame to the top */
                 justify-content: center; /* Horizontally centers the frame */
                 padding: 0px;
                 box-sizing: border-box;
@@ -39,13 +39,13 @@
 
             /* --- Frame Styling --- */
             .frame-container {
-                /* IMPORTANT: Make sure you save your uploaded image as 'homepage_frame.jpg' in your /public folder */
                 background-image: url('/homepage_background.jpg');
                 background-size: 100% 100%; /* Stretches the frame to fit the container */
                 background-repeat: no-repeat;
                 
                 width: auto;
                 height: auto;
+                max-height: 85vh;  /* Keeps it within screen height on mobile */
                 aspect-ratio: 3 / 4; /* Ensures the container keeps the frame's shape */
                 
                 display: flex;
@@ -60,18 +60,45 @@
 
             /* --- Font Styling --- */
             .navbar.navbar-default {
-                font-family: 'Playfair Display', serif;
+                font-family: 'EB Garamond', serif;
                 font-weight: 700;
                 flex-shrink: 0; /* Prevents navbar from shrinking */
 
                 margin-bottom: 0;
-                border-bottom: none;
-                border-radius: 0; 
+                
+                /* --- FIX #1: This removes the border from ALL sides, not just the bottom --- */
+                border: none; 
+                
+                border-radius: 0;
+                
+                background-image: url('./IMG_8378.jpg'); /* YOU must provide this image file */
+                background-size: cover;          /* Ensures the image covers the navbar */
+                background-position: center center; /* Keeps the image centered */
             }
-             .navbar-brand, .nav > li > a {
-                 font-size: 18px;
+             
+            /* This rule targets the 'Gallery' text*/
+            .navbar-default .navbar-brand {
+                color: #ffffff;
+                font-size: 24px;
+            }
+            
+            .navbar-default .navbar-nav > li > a,
+            .navbar-default .navbar-brand a {  /* --- FIX #2: This rule now targets the Login/Logout links --- */
+                color: #ffffff;
+                font-size: 18px;
             }
 
+            /* This rule ensures ALL links stay white on hover */
+            .navbar-default .navbar-nav > li > a:hover,
+            .navbar-default .navbar-nav > li > a:focus,
+            .navbar-default .navbar-brand:hover,
+            .navbar-default .navbar-brand:focus,
+            .navbar-default .navbar-brand a:hover,   /* --- FIX #2 (Hover): Added this rule --- */
+            .navbar-default .navbar-brand a:focus {  /* --- FIX #2 (Focus): Added this rule --- */
+                color: #f1f1f1; /* A very slightly off-white for a subtle hover */
+            }
+
+            /* --- Homepage Content Styles (Unchanged) --- */
             .prompt-text, #scan-photo-button {
                 font-family: 'EB Garamond', serif;
             }
@@ -87,7 +114,6 @@
                 font-size: 20px;
                 margin-top: 25px;
             }
-
             #status-message {
                 font-family: 'EB Garamond', serif;
                 font-style: italic;
@@ -96,10 +122,10 @@
                 color: #555;
                 min-height: 20px; /* Prevents layout shift when text appears */
             }
-
         </style>
     </head>
     <body>
+        <!-- ... (Your HTML body remains exactly the same) ... -->
         <div class="navbar navbar-default">
             <div class="container">
                 <div class="navbar-header">
@@ -120,11 +146,8 @@
             </div>
         </div>
 
-        <!-- This is the main content area that will be centered on the page -->
         <main class="main-content">
-            <!-- This container IS the frame -->
             <div class="frame-container">
-                <!-- This content lives INSIDE the frame -->
                 <div class="prompt-text">
                     <h3>Choose a photo, we'll tell you its tale</h3>
                     <p><i>Stand close, zoom in, and try to minimize glare!</i></p>
@@ -139,7 +162,6 @@
             </div>
         </main>
         
-        <!-- These elements are needed by the JS but don't need to be inside the frame -->
         <input type="file" id="camera-input" style="display: none;" accept="image/*" capture="environment"/>
                 
         <script src="app.js"></script>
