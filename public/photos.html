@@ -12,6 +12,14 @@
         <script defer src="/__/firebase/12.1.0/firebase-functions-compat.js"></script>
         <script defer src="/__/firebase/12.1.0/firebase-storage-compat.js"></script>
         <script defer src="/__/firebase/init.js"></script>
+        <style>
+            #status-message {
+                margin: 0; 
+                padding: 0;
+                height: auto;
+                min-height: 0px; /* Prevents layout shift when text appears */
+            }
+        </style>
     </head>
     <body>
         <div class="navbar navbar-default">
@@ -20,7 +28,7 @@
                     <a class="navbar-brand" href="/">Gallery</a>
                 </div>
                 <ul class="nav navbar-nav">
-                    <li><a href="/photos.html">Photos</a></li>
+                    <li><a href="#" id="scan-photo-button">Scan</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <li id="user-info" style="display: none;">
@@ -37,6 +45,8 @@
         <div class="container">
             <h3><strong>Photos</strong></h3>
 
+            <p id="status-message" style="display: flex;"></p>
+
             <a href="/add-photo.html" id="add-photo-button" class="btn btn-success btn-sm" style="display: none;">
                 <i class="glyphicon glyphicon-plus"></i>
                 Add Photo
@@ -48,7 +58,7 @@
             <p id="loading-message">Loading photos...</p>
 
         </div>
-
+        <input type="file" id="camera-input" style="display: none;" accept="image/*" capture="environment"/>
         <script src="photos.js"></script>
     </body>
 </html>

@@ -17,3 +17,12 @@ body {
     font-weight: 700;
     font-size: 22px;
 }
+
+#status-message {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 16px;
+    margin-top: 20px; /* Add space above the message */
+    color: #555;
+    min-height: 20px; /* Prevents layout shift when text appears */
+}
