@@ -27,14 +27,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (photo.relatedPhotos && photo.relatedPhotos.length > 0) {
             // Start building the list
             relatedPhotosHtml = `
-                <h4>Related Photos</h4>
+                <h4><strong>Related photos</strong></h4>
                 <ul>
             `;
             
             // Loop through each related photo and create a list item with a link
             photo.relatedPhotos.forEach(related => {
                 // The backend already gave us the name, so we can build the link text
-                const linkText = `${related.name} ${related.text ? `(${related.text})` : ''}`;
+                const linkText = `${related.name} ${related.text ? `- ${related.text}` : ''}`;
                 relatedPhotosHtml += `<li><a href="/view-photo.html?id=${related.id}">${linkText}</a></li>`;
             });
 
@@ -45,10 +45,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // --- UPDATED: The main HTML template ---
         // It now removes the old "People" field and includes our new relatedPhotosHtml block.
         container.innerHTML = `
-            <h3>${photo.name || 'Untitled'}</h3>
+            <h3 style="font-size: 24px;"><strong>${photo.name || 'Untitled'}</strong></h3>
+            <p><i>Scroll down to learn more</i></p>
+            <hr>
             <img src="${photo.imageUrl}" class="img-responsive" alt="${photo.description || 'Gallery photo'}">
             <hr>
-            <h4>Details</h4>
+            <h4 style="font-size: 22px;"><strong>Details</strong></h4>
             <p><strong>Date:</strong> ${photo.date || 'Unknown'}</p>
             <p><strong>Description:</strong> ${photo.description || 'No description.'}</p>
             ${relatedPhotosHtml} 
