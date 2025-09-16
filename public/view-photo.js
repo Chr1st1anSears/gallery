@@ -37,14 +37,14 @@ document.addEventListener('DOMContentLoaded', function() {
               relatedPhotosHtml += `<li>`; 
               
               // 2. Add the blue, hyperlinked text (only the name).
-              relatedPhotosHtml += `<a href="/view-photo.html?id=${related.id}">${related.name}</a>`;
+              relatedPhotosHtml += `<a href="/view-photo.html?id=${related.id}"><strong>${related.name}</strong></a>`;
               
               // 3. Add the non-hyperlinked relationship text, separated by a line break.
               if (related.text) {
                   // Use a <br> to force a newline, followed by the text.
                   // We wrap the text in a span just to ensure no unintended styling is applied,
                   // but it will inherit the default font size.
-                  relatedPhotosHtml += `<br><span class="related-photo-detail"><i>${related.text}</i></span>`;
+                  relatedPhotosHtml += `<br><span class="related-photo-detail">${related.text}</span>`;
               }
               
               // 4. Close the list item.
