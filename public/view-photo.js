@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <hr>
             <img src="${photo.imageUrl}" class="img-responsive" alt="${photo.description || 'Gallery photo'}">
             <hr>
-            <h4 style="font-size: 20px;"><strong>Details</strong></h4>
             <p><strong>Date:</strong> ${photo.date || 'Unknown'}</p>
             <p class="photo-description"><strong>Description:</strong> ${photo.description || 'No description.'}</p>
             ${relatedPhotosHtml} 
