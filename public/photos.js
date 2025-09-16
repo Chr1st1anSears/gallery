@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <img src="${photo.imageUrl}" style="max-width: 300px; max-height: 250px;" alt="gallery photo">
               </div>
               <div class="media-body">
-                  <h4><strong>${photo.name || 'Untitled'}</strong></h4>
+                  <h4 style="font-size: 20px;"><strong>${photo.name || 'Untitled'}</strong></h4>
                   <p>${photo.date || 'Unknown date'}</p>
               </div>
             </a>

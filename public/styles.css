@@ -6,22 +6,23 @@
 /* By applying it to the <body>, every element will inherit it by default */
 body {
     font-family: 'EB Garamond', serif;
+    font-size: 18px;
 }
 
 .navbar-default .navbar-nav > li > a,
 .navbar-default .navbar-brand a {  /* --- FIX #2: This rule now targets the Login/Logout links --- */
-    font-size: 18px;
+    font-size: 20px;
 }
 
 .navbar-default .navbar-header .navbar-brand {
     font-weight: 700;
-    font-size: 22px;
+    font-size: 24px;
 }
 
 #status-message {
     font-family: 'EB Garamond', serif;
     font-style: italic;
-    font-size: 16px;
+    font-size: 18px;
     margin-top: 20px; /* Add space above the message */
     color: #555;
     min-height: 20px; /* Prevents layout shift when text appears */
