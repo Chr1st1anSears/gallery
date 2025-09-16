@@ -1,0 +1,29 @@
+/* --- 1. Import EB Garamond from Google Fonts --- */
+/* We import the weights we need site-wide: regular, regular-italic, and bold */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&display=swap');
+
+/* --- 2. Apply EB Garamond to the ENTIRE site --- */
+/* By applying it to the <body>, every element will inherit it by default */
+body {
+    font-family: 'EB Garamond', serif;
+    font-size: 18px;
+}
+
+.navbar-default .navbar-nav > li > a,
+.navbar-default .navbar-brand a {  /* --- FIX #2: This rule now targets the Login/Logout links --- */
+    font-size: 20px;
+}
+
+.navbar-default .navbar-header .navbar-brand {
+    font-weight: 700;
+    font-size: 24px;
+}
+
+#status-message {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+    margin-top: 20px; /* Add space above the message */
+    color: #555;
+    min-height: 20px; /* Prevents layout shift when text appears */
+}
