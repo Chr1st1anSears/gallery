@@ -33,10 +33,23 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Loop through each related photo and create a list item with a link
             photo.relatedPhotos.forEach(related => {
-                // The backend already gave us the name, so we can build the link text
-                const linkText = `${related.name} ${related.text ? `- ${related.text}` : ''}`;
-                relatedPhotosHtml += `<li><a href="/view-photo.html?id=${related.id}">${linkText}</a></li>`;
-            });
+              // 1. Start the list item.
+              relatedPhotosHtml += `<li>`; 
+              
+              // 2. Add the blue, hyperlinked text (only the name).
+              relatedPhotosHtml += `<a href="/view-photo.html?id=${related.id}">${related.name}</a>`;
+              
+              // 3. Add the non-hyperlinked relationship text, separated by a line break.
+              if (related.text) {
+                  // Use a <br> to force a newline, followed by the text.
+                  // We wrap the text in a span just to ensure no unintended styling is applied,
+                  // but it will inherit the default font size.
+                  relatedPhotosHtml += `<br><span class="related-photo-detail">${related.text}</span>`;
+              }
+              
+              // 4. Close the list item.
+              relatedPhotosHtml += `</li>`;
+          });
 
             // Close the list
             relatedPhotosHtml += '</ul>';
