@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   // Use a <br> to force a newline, followed by the text.
                   // We wrap the text in a span just to ensure no unintended styling is applied,
                   // but it will inherit the default font size.
-                  relatedPhotosHtml += `<br><span class="related-photo-detail">${related.text}</span>`;
+                  relatedPhotosHtml += `<br><span class="related-photo-detail"><i>${related.text}</i></span>`;
               }
               
               // 4. Close the list item.
