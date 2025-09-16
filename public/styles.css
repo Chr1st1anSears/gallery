@@ -37,3 +37,8 @@ body {
     margin-top: 20px;
     margin-bottom: 20px; 
 }
+
+.photo-description {
+    /* CRITICAL FIX: The pre-wrap value respects newlines and wraps long lines */
+    white-space: pre-wrap;
+}
