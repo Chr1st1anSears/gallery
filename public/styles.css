@@ -23,7 +23,17 @@ body {
     font-family: 'EB Garamond', serif;
     font-style: italic;
     font-size: 18px;
-    margin-top: 20px; /* Add space above the message */
     color: #555;
-    min-height: 20px; /* Prevents layout shift when text appears */
+
+    /* These properties ensure it's "invisible" when empty */
+    margin: 0;
+    padding: 0;
+    min-height: 0px;
+}
+
+/* This new rule adds spacing *only* when the message is not empty */
+#status-message:not(:empty) {
+    /* This provides the space above the message, but only when it appears */
+    margin-top: 20px;
+    margin-bottom: 20px; 
 }
