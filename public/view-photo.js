@@ -45,12 +45,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // --- UPDATED: The main HTML template ---
         // It now removes the old "People" field and includes our new relatedPhotosHtml block.
         container.innerHTML = `
-            <h3 style="font-size: 24px;"><strong>${photo.name || 'Untitled'}</strong></h3>
-            <p><i>Scroll down to learn more</i></p>
+            <h3 style="font-size: 22px;"><strong>${photo.name || 'Untitled'}</strong></h3>
+            <p style="font-size: 16px><i>Scroll to learn more</i></p>
             <hr>
             <img src="${photo.imageUrl}" class="img-responsive" alt="${photo.description || 'Gallery photo'}">
             <hr>
-            <h4 style="font-size: 22px;"><strong>Details</strong></h4>
+            <h4 style="font-size: 20px;"><strong>Details</strong></h4>
             <p><strong>Date:</strong> ${photo.date || 'Unknown'}</p>
             <p><strong>Description:</strong> ${photo.description || 'No description.'}</p>
             ${relatedPhotosHtml} 
