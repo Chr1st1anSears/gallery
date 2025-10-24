@@ -1,8 +1,10 @@
+
 # functions/main.py
 
 import urllib.parse
 import re
 import base64
+import numpy as np
 from firebase_admin import initialize_app, firestore, storage
 from firebase_functions import https_fn, options
 # We only need to import CallableRequest directly now
@@ -13,9 +15,7 @@ from google.cloud import aiplatform
 # --- Configuration ---
 PROJECT_ID = "gallery-469818"
 REGION = "us-central1"
-INDEX_ID = "2593143198528307200" 
-ENDPOINT_ID = "7942821421518946304"
-# ---------------------
+# --- End Configuration ---
 
 # --- Allow list ---
 AUTHORIZED_USERS = [
@@ -60,7 +60,7 @@ def getphotos(req: CallableRequest) -> any:
 
 @https_fn.on_call(memory=options.MemoryOption.GB_1)
 def addphoto(req: CallableRequest) -> any:
-    """Saves photo metadata to Firestore AND indexes it in Vector Search."""
+    """Saves photo metadata to Firestore and generates its embedding."""
     if req.auth is None:
         raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.UNAUTHENTICATED, message="Authentication required.")
     
@@ -74,35 +74,37 @@ def addphoto(req: CallableRequest) -> any:
         if not image_url:
             raise ValueError("imageUrl is missing from the request.")
 
+        # 1. Save the initial document to get an ID
+        db = firestore.client()
+        photo_doc_data = {
+            'imageUrl': image_url,
+            'name': data.get('name'),
+            'date': data.get('date'),
+            'relatedPhotos': data.get('relatedPhotos', []),
+            'description': data.get('description'),
+            'uploaderUid': req.auth.uid
+        }
+        doc_ref = db.collection("photos").add(photo_doc_data)[1] # add() returns a tuple
+        print(f"Created new photo document with ID: {doc_ref.id}")
+
+        # 2. Generate the embedding
         gcs_uri = get_gcs_uri_from_url(image_url)
         if gcs_uri:
-            print(f"Indexing new photo: {gcs_uri}")
+            print(f"Generating embedding for new photo: {gcs_uri}")
             model = MultiModalEmbeddingModel.from_pretrained("multimodalembedding@001")
             image = VertexImage.load_from_file(gcs_uri)
             embeddings = model.get_embeddings(image=image)
             
-            my_index = aiplatform.MatchingEngineIndex(index_name=INDEX_ID)
-            
-            my_index.upsert_datapoints(datapoints=[{
-                "datapoint_id": gcs_uri,
-                "feature_vector": embeddings.image_embedding,
-            }])
-            print(f"Successfully indexed '{gcs_uri}'.")
+            # 3. Update the document with the embedding
+            if embeddings.image_embedding:
+                doc_ref.update({"embedding": embeddings.image_embedding})
+                print(f"Successfully added embedding to document {doc_ref.id}.")
+            else:
+                print(f"Warning: Could not generate embedding for {gcs_uri}.")
         else:
             print(f"Warning: Could not parse GCS URI from URL: {image_url}")
-
-        photo_doc = {
-            'imageUrl': image_url,
-            'name': data.get('name'),
-            'date': data.get('date'),
-            'relatedPhotos': data.get('relatedPhotos', []), # Get the array from the client, default to empty
-            'description': data.get('description'),
-            'uploaderUid': req.auth.uid
-        }
-        db = firestore.client()
-        db.collection("photos").add(photo_doc)
         
-        return {"status": "success", "message": "Photo saved and indexed."}
+        return {"status": "success", "message": "Photo saved and embedding generated."}
     except Exception as e:
         print(f"Error in addphoto function: {e}")
         raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INTERNAL, message="An error occurred while adding the photo.")
@@ -190,7 +192,7 @@ def editphoto(req: CallableRequest) -> any:
 
 @https_fn.on_call(memory=options.MemoryOption.GB_1)
 def deletephoto(req: CallableRequest) -> any:
-    """Deletes a photo from Firestore, Storage, AND the Vector Search index."""
+    """Deletes a photo from Firestore and Storage."""
     if req.auth is None:
         raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.UNAUTHENTICATED, message="Authentication required.")
 
@@ -214,16 +216,7 @@ def deletephoto(req: CallableRequest) -> any:
         image_url = doc_data.get('imageUrl')
 
         if image_url:
-            gcs_uri = get_gcs_uri_from_url(image_url)
-
-            if gcs_uri:
-                print(f"Removing '{gcs_uri}' from Vector Search index...")
-                my_index = aiplatform.MatchingEngineIndex(index_name=INDEX_ID)
-                my_index.remove_datapoints(datapoint_ids=[gcs_uri])
-                print("Successfully removed from index.")
-            else:
-                print(f"Warning: Could not parse GCS URI from URL to de-index: {image_url}")
-
+            # Delete from Cloud Storage
             file_path_match = re.search(r"/o/(.*?)\?alt=media", image_url)
             if file_path_match:
                 bucket = storage.bucket()
@@ -233,9 +226,10 @@ def deletephoto(req: CallableRequest) -> any:
                     blob.delete()
                     print(f"Deleted file from Storage: {decoded_file_path}")
 
+        # Delete from Firestore
         doc_ref.delete()
         
-        return {"status": "success", "message": "Photo deleted and de-indexed."}
+        return {"status": "success", "message": "Photo deleted."}
     except Exception as e:
         print(f"Error in deletephoto function: {e}")
         raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INTERNAL, message="An error occurred.")
@@ -244,13 +238,14 @@ def deletephoto(req: CallableRequest) -> any:
 @https_fn.on_call(memory=options.MemoryOption.GB_1)
 def findphotobymatch(req: CallableRequest) -> any:
     """
-    Receives an image, finds the closest match in the Vector Search index,
-    and returns the corresponding Firestore document ID.
+    Receives an image, finds the closest match from the Firestore database
+    by performing an in-memory vector similarity search.
     """
     if not req.data or not req.data.get("image"):
         raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INVALID_ARGUMENT, message="Image data is required.")
         
     try:
+        # 1. Generate embedding for the user's image
         image_string = req.data["image"]
         image_bytes = base64.b64decode(image_string)
         
@@ -260,30 +255,36 @@ def findphotobymatch(req: CallableRequest) -> any:
         embeddings = model.get_embeddings(image=image)
         query_embedding = embeddings.image_embedding
 
-        index_endpoint = aiplatform.MatchingEngineIndexEndpoint(index_endpoint_name=ENDPOINT_ID)
-        
-        neighbors = index_endpoint.find_neighbors(
-            deployed_index_id="v3_deployment_1757447059850", # This should be the deployed index ID
-            queries=[query_embedding],
-            num_neighbors=1
-        )
-        
-        if not neighbors or not neighbors[0]:
-            return {"photoId": None}
-
-        best_match = neighbors[0][0]
-        matched_gcs_uri = best_match.id
-        
+        # 2. Fetch all photo documents from Firestore
         db = firestore.client()
         docs = db.collection("photos").stream()
+
+        best_match_id = None
+        highest_similarity = -1.0  # Cosine similarity ranges from -1 to 1
+        SIMILARITY_THRESHOLD = 0.6 # Only return a match if it's strong enough
+
+        # 3. Loop and compare
         for doc in docs:
             photo_data = doc.to_dict()
-            image_url = photo_data.get("imageUrl", "")
-            doc_gcs_uri = get_gcs_uri_from_url(image_url)
-            if doc_gcs_uri == matched_gcs_uri:
-                return {"photoId": doc.id}
-        
-        return {"photoId": None}
+            
+            # Ensure the document has an embedding
+            if "embedding" in photo_data and photo_data["embedding"]:
+                doc_embedding = photo_data["embedding"]
+                
+                # Calculate dot product similarity
+                similarity = np.dot(query_embedding, doc_embedding)
+                
+                if similarity > highest_similarity:
+                    highest_similarity = similarity
+                    best_match_id = doc.id
+
+        # 4. Return the best match if it meets the threshold
+        if highest_similarity >= SIMILARITY_THRESHOLD:
+            return {"photoId": best_match_id}
+        else:
+            print(f"No sufficiently similar match found. Highest similarity: {highest_similarity}")
+            return {"photoId": None}
+
     except Exception as e:
         print(f"Error in findphotobymatch: {e}")
         raise https_fn.HttpsError(code=https_fn.FunctionsErrorCode.INTERNAL, message="An error occurred during the visual search.")
