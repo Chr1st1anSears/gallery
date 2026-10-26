@@ -1,15 +1,24 @@
 rules_version = '2';
 
+// Least-privilege rules: ALL direct client access is denied.
+//
+// Why: the web client never talks to Firestore directly. Every read and write
+// goes through callable Cloud Functions (getphotos, getphotodetails, addphoto,
+// editphoto, deletephoto, findphotobymatch), which authenticate the caller and
+// enforce authorization (e.g. the editor allowlist) server-side.
+//
+// Those functions use the Firebase Admin SDK, which bypasses Security Rules,
+// so denying everything here does not affect the app. It does stop anyone
+// from using the client SDK with this project's public config to skip the
+// backend's checks and read or modify data directly.
+//
+// If you ever add direct client access, add narrowly scoped rules for that
+// specific path. Do not loosen this catch-all.
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Match the 'photos' collection
-    match /photos/{photoId} {
-      // Anyone can read (get, list) the documents in this collection.
-      allow read: if true;
-
-      // Only authenticated users can create, update, or delete documents.
-      allow write: if request.auth != null;
+    // Catch-all: covers every collection and subcollection, including photos.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

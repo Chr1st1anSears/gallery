@@ -1,155 +1,90 @@
-document.addEventListener('DOMContentLoaded', function() {
-  try {
-    const auth = firebase.auth();
-    const storage = firebase.storage();
-    const functions = firebase.functions();
+// add-photo.js — upload a new photo (editors only).
+document.addEventListener('DOMContentLoaded', () => {
+  const { el, errorMessage } = Gallery;
+  const { createRelatedPhotosEditor, fetchPhotoChoices, requireEditor } = GalleryForm;
 
-    // --- Get all necessary DOM elements ---
-    const addPhotoForm = document.getElementById('add-photo-form');
-    const uploadInput = document.getElementById('image-upload');
-    const cameraInput = document.getElementById('camera-input');
-    const fileNameDisplay = document.getElementById('file-name');
-    const submitButton = document.getElementById('submit-button');
-    const relatedPhotosContainer = document.getElementById('related-photos-container');
-    const addRelatedPhotoButton = document.getElementById('add-related-photo-button');
+  const MAX_UPLOAD_BYTES = 15 * 1024 * 1024; // Must match storage.rules.
+  const EXTENSIONS = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic', 'image/gif': 'gif' };
 
-    let currentUser = null;
-    let selectedFile = null;
-    let allPhotos = []; // NEW: This will store the list of all photos for our dropdowns
+  const form = document.getElementById('add-photo-form');
+  const uploadInput = document.getElementById('image-upload');
+  const cameraInput = document.getElementById('camera-input');
+  const fileNameDisplay = document.getElementById('file-name');
+  const submitButton = document.getElementById('submit-button');
+  const relatedContainer = document.getElementById('related-photos-container');
+  const addRelatedButton = document.getElementById('add-related-photo-button');
+  const formStatus = document.getElementById('form-status');
 
-    // --- Main Authorization and Data Fetching ---
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        // NEW: Once the user is logged in, fetch all photos to populate the dropdowns.
-        fetchAllPhotos();
-      } else {
-        window.location.href = '/photos.html';
-        currentUser = null;
-      }
-    });
+  let currentUser = null;
+  let selectedFile = null;
+  let related = null;
 
-    // --- NEW: Function to fetch all photos ---
-    const fetchAllPhotos = async () => {
-      try {
-        const getPhotosCallable = functions.httpsCallable('getphotos');
-        const result = await getPhotosCallable();
-        // We only need the id and name for the dropdown
-        allPhotos = result.data.map(photo => ({ id: photo.id, name: photo.name }));
-        // Add the first empty row to the form now that we have the data
-        addNewRelatedPhotoRow(); 
-      } catch (error) {
-        console.error("Error fetching photo list:", error);
-        relatedPhotosContainer.innerHTML = '<p class="text-danger">Could not load photo list for dropdowns.</p>';
-      }
-    };
+  const setStatus = (message) => { formStatus.textContent = message || ''; };
 
-    // --- NEW: Function to create a single 'Related Photo' row UI ---
-    const addNewRelatedPhotoRow = () => {
-      const row = document.createElement('div');
-      row.className = 'row related-photo-row'; // Bootstrap row for alignment
-      row.style.marginBottom = '10px';
+  requireEditor().then(async (user) => {
+    currentUser = user;
+    try {
+      related = createRelatedPhotosEditor(relatedContainer, await fetchPhotoChoices());
+      related.addRow();
+    } catch (error) {
+      relatedContainer.replaceChildren(
+        el('p', { className: 'text-danger', text: 'Could not load the photo list for related photos.' })
+      );
+    }
+  });
 
-      // Create the dropdown (select) element
-      const selectElement = document.createElement('select');
-      selectElement.className = 'form-control';
-      selectElement.innerHTML = `<option value="">-- Select a Photo --</option>` + 
-        allPhotos.map(photo => `<option value="${photo.id}">${photo.name}</option>`).join('');
+  addRelatedButton.addEventListener('click', () => related && related.addRow());
 
-      // Create the text input for the relationship
-      const textInput = document.createElement('input');
-      textInput.type = 'text';
-      textInput.className = 'form-control';
-      textInput.placeholder = 'Relationship (e.g., husband, sister)';
-      
-      // Create the remove button
-      const removeButton = document.createElement('button');
-      removeButton.type = 'button';
-      removeButton.className = 'btn btn-danger btn-xs';
-      removeButton.innerHTML = '&times;'; // A simple 'x' character
+  const handleFileSelect = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setStatus('Please choose an image file.');
+      return;
+    }
+    if (file.size >= MAX_UPLOAD_BYTES) {
+      setStatus('That image is too large (15 MB max).');
+      return;
+    }
+    selectedFile = file;
+    setStatus('');
+    fileNameDisplay.textContent = 'Selected: ' + file.name;
+  };
+  uploadInput.addEventListener('change', handleFileSelect);
+  cameraInput.addEventListener('change', handleFileSelect);
 
-      // Assemble the row using Bootstrap's grid system
-      row.innerHTML = `
-        <div class="col-xs-6"></div>
-        <div class="col-xs-5"></div>
-        <div class="col-xs-1" style="text-align: right;"></div>
-      `;
-      row.children[0].appendChild(selectElement);
-      row.children[1].appendChild(textInput);
-      row.children[2].appendChild(removeButton);
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentUser || !selectedFile) {
+      setStatus('Please choose a photo to upload.');
+      return;
+    }
 
-      relatedPhotosContainer.appendChild(row);
-    };
+    submitButton.disabled = true;
+    submitButton.textContent = 'Uploading...';
+    setStatus('');
+    try {
+      // Random, unguessable object name; the original filename is not used.
+      const ext = EXTENSIONS[selectedFile.type] || 'img';
+      const path = `${currentUser.uid}/${crypto.randomUUID()}.${ext}`;
+      const ref = firebase.storage().ref(path);
+      await ref.put(selectedFile, { contentType: selectedFile.type });
+      const imageUrl = await ref.getDownloadURL();
 
-    // --- Event listener for the 'Add another' button ---
-    addRelatedPhotoButton.addEventListener('click', addNewRelatedPhotoRow);
-
-    // --- NEW: Use event delegation to handle all 'remove' button clicks ---
-    relatedPhotosContainer.addEventListener('click', (e) => {
-      if (e.target.tagName === 'BUTTON' && e.target.className.includes('btn-danger')) {
-        // Find the parent '.related-photo-row' and remove it
-        e.target.closest('.related-photo-row').remove();
-      }
-    });
-
-    // --- File selection logic (unchanged) ---
-    const handleFileSelect = (e) => {
-      if (e.target.files.length > 0) {
-        selectedFile = e.target.files[0];
-        fileNameDisplay.textContent = `Selected: ${selectedFile.name}`;
-      }
-    };
-    uploadInput.addEventListener('change', handleFileSelect);
-    cameraInput.addEventListener('change', handleFileSelect);
-
-    // --- UPDATED: Form submission logic ---
-    addPhotoForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      if (!currentUser || !selectedFile) {
-        alert("You must be logged in and select a file to upload.");
-        return;
-      }
-
-      submitButton.disabled = true;
-      submitButton.textContent = 'Uploading...';
-      
-      try {
-        const filePath = `${currentUser.uid}/${Date.now()}_${selectedFile.name}`;
-        const storageRef = storage.ref(filePath);
-        const uploadTask = await storageRef.put(selectedFile);
-        const downloadURL = await uploadTask.ref.getDownloadURL();
-
-        // --- NEW: Gather the 'relatedPhotos' data from the UI ---
-        const relatedPhotosData = [];
-        const rows = relatedPhotosContainer.querySelectorAll('.related-photo-row');
-        rows.forEach(row => {
-          const photoId = row.querySelector('select').value;
-          const relationshipText = row.querySelector('input').value;
-          // Only add it if a photo has been selected
-          if (photoId) { 
-            relatedPhotosData.push({ id: photoId, text: relationshipText });
-          }
-        });
-
-        const addPhotoCallable = functions.httpsCallable('addphoto');
-        await addPhotoCallable({
-          imageUrl: downloadURL,
-          name: document.getElementById('name').value,
-          date: document.getElementById('date').value,
-          description: document.getElementById('description').value,
-          relatedPhotos: relatedPhotosData // Send the new array to the backend
-        });
-
-        window.location.href = '/photos.html';
-      } catch (error) {
-        console.error("Error in the upload process:", error);
-        alert("An error occurred. Check the console.");
-        submitButton.disabled = false;
-        submitButton.textContent = 'Save';
-      }
-    });
-  } catch (e) {
-    console.error(e);
-  }
+      submitButton.textContent = 'Saving...';
+      await firebase.functions().httpsCallable('addphoto')({
+        imageUrl,
+        name: document.getElementById('name').value,
+        date: document.getElementById('date').value,
+        description: document.getElementById('description').value,
+        relatedPhotos: related ? related.getValue() : [],
+      });
+      window.location.href = '/photos.html';
+    } catch (error) {
+      console.error('Upload failed:', error && error.code);
+      setStatus(errorMessage(error));
+      submitButton.disabled = false;
+      submitButton.textContent = 'Save';
+    }
+  });
 });
