@@ -1,12 +1,27 @@
 rules_version = '2';
+
+// Cloud Storage rules for Gallery.
+//
+// Layout: each editor uploads into their own folder, /{uid}/{fileName}.
+//
+// * Reads are public so the photo pages work for anyone (images are referenced
+//   by unguessable download URLs from the backend).
+// * Writes are limited to signed-in users who have the `editor` custom claim
+//   (granted with scripts/set_editor.py), only into their own folder, only for
+//   image files, and only up to 15 MB. Deletes happen server-side through the
+//   `deletephoto` Cloud Function, so clients cannot delete objects.
 service firebase.storage {
   match /b/{bucket}/o {
-    // A user can only write to their own folder.
-    match /{userId}/{allPaths=**} {
-      allow write: if request.auth != null && request.auth.uid == userId;
-      
-      // Allow anyone to read the files.
-      allow read;
+    match /{userId}/{fileName} {
+      allow read: if true;
+
+      allow create, update: if request.auth != null
+                    && request.auth.uid == userId
+                    && request.auth.token.editor == true
+                    && request.resource.size < 15 * 1024 * 1024
+                    && request.resource.contentType.matches('image/.*');
+
+      allow delete: if false;
     }
   }
 }

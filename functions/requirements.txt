@@ -1,7 +1,7 @@
 # requirements.txt
 
-firebase-functions==0.2.0
-firebase-admin==6.5.0
+firebase-functions==0.4.3
+firebase-admin==6.9.0
 google-cloud-storage==2.14.0
 google-cloud-aiplatform==1.47.0
 numpy==1.26.4
